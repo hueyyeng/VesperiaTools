@@ -42,17 +42,18 @@ def extract_textures_from_package(package_path):
     })
     subprocess.check_call(fps4e_command)
 
-    # 3. Search for TXM files and decode it
+    # 3. Search for TXM files recursively and decode it
     unpacked_dir_path = f"{os.path.join(pkg_dir, pkg_name_dec)}.ext"
-    for file in os.listdir(unpacked_dir_path):
-        if file.endswith(("TXM",)):
-            texture_filename = os.path.splitext(file)[0]
-            txm_file = f"{os.path.join(unpacked_dir_path, texture_filename)}.TXM"
-            txv_file = f"{os.path.join(unpacked_dir_path, texture_filename)}.TXV"
-            texture_decode_command = f"{HYOUTATOOLS} Tales.Vesperia.Texture.Decode {txm_file} {txv_file}"
-            logger.debug({
-                "cmd": texture_decode_command,
-            })
-            subprocess.check_call(texture_decode_command, stdout=subprocess.PIPE)
+    for root, dirs, files in os.walk(unpacked_dir_path):
+        for file in files:
+            if file.endswith(("TXM",)):
+                texture_filename = os.path.splitext(file)[0]
+                txm_file = f"{os.path.join(root, texture_filename)}.TXM"
+                txv_file = f"{os.path.join(root, texture_filename)}.TXV"
+                texture_decode_command = f"{HYOUTATOOLS} Tales.Vesperia.Texture.Decode {txm_file} {txv_file}"
+                logger.debug({
+                    "cmd": texture_decode_command,
+                })
+                subprocess.check_call(texture_decode_command, stdout=subprocess.PIPE)
 
     logger.debug("Process completed")
