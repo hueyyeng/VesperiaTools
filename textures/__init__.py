@@ -20,7 +20,7 @@ def extract_textures_from_package(package_path):
 
     Returns
     -------
-    bool
+    None
 
     Notes
     -----
@@ -43,7 +43,8 @@ def extract_textures_from_package(package_path):
 
     # 2.2 Unpack FPS4 package using HyoutaTools
     pkg_dir = os.path.split(package_path)[0]
-    pkg_decompressed = f"{os.path.split(package_path)[1]}.dec"
+    pkg_name = os.path.split(package_path)[1]
+    pkg_decompressed = f"{pkg_name}.dec"
     pkg_decompressed_path = os.path.join(pkg_dir, pkg_decompressed)
     check_fourcc('FPS4', pkg_decompressed_path)
     fps4e_command = f"{HYOUTATOOLS} ToVfps4e {pkg_decompressed_path}"
@@ -52,9 +53,18 @@ def extract_textures_from_package(package_path):
     })
     subprocess.check_call(fps4e_command)
 
-    # 3. Search for TXM files recursively and decode it
-    unpacked_dir_path = f"{pkg_decompressed_path}.ext"
-    for root, dirs, files in os.walk(unpacked_dir_path):
+    # 3.1 If the extracted package resulted in 0000 and 0001 (read: actually TXM and TXV file)
+    pkg_extracted_path = f"{pkg_decompressed_path}.ext"
+    check_for_0000_0001 = os.listdir(pkg_extracted_path)
+    if len(check_for_0000_0001) == 2:
+        old_txm = os.path.join(pkg_extracted_path, check_for_0000_0001[0])
+        old_txv = os.path.join(pkg_extracted_path, check_for_0000_0001[1])
+        new_txm = os.path.join(pkg_extracted_path, f"{pkg_name}.TXM")
+        new_txv = os.path.join(pkg_extracted_path, f"{pkg_name}.TXV")
+        os.rename(old_txm, new_txm)
+        os.rename(old_txv, new_txv)
+    # 3.2 Search for TXM files recursively and decode it
+    for root, dirs, files in os.walk(pkg_extracted_path):
         for file in files:
             if file.endswith(("TXM",)):
                 texture_filename = os.path.splitext(file)[0]
