@@ -122,7 +122,6 @@ def get_byte_struct(data, endian, offset, fmt):
 
     Returns
     -------
-    int
 
     Notes
     -----
@@ -139,103 +138,263 @@ def get_byte_struct(data, endian, offset, fmt):
     return result
 
 
-def unpack_chara_dat(dat_path, root=".", depth=0):
+def unpack_chara_dat(data, root=".", depth=0, verbose=1, force_save=False):
     """Unpack DAT file from chara.svo package
 
     Parameters
     ----------
-    dat_path : str
+    data : str or bytes
         Path to DAT file (e.g. 'path/to/0000')
     root : str
         The root path for unpacking
     depth : int
         Level of depth for unpacking
+    verbose : int
+    force_save : bool
 
     Returns
     -------
 
     """
-    indent = ("==" * depth) + "> "
     # 1. Load mesh file and check if FPS4
-    check_fourcc("FPS4", dat_path)
-    f = open(dat_path, "rb")
-    data = f.read()
-    f.close()
+    if isinstance(data, str) and os.path.isfile(data):
+        logger.debug({"data_path": data})
+        check_fourcc("FPS4", data)
+        with open(data, "rb") as f:
+            data = f.read()
 
     # 2. If FPS4, need to split further
     file_count = get_byte_struct(data, ">", 0x4, "I")
-    print("file_count", file_count)
     file_data_offset = get_byte_struct(data, ">", 0xc, "I")
-    print("file_data_offset", file_data_offset)
     header_size = get_byte_struct(data, ">", 0x8, "I")
-    print("header_size", header_size)
+    logger.debug({
+        "file_count": file_count,
+        "file_data_offset": file_data_offset,
+        "header_size": header_size,
+    })
     assert header_size == 0x1C, "Header size should be a constant"
 
     file_descriptor_size = get_byte_struct(data, ">", 0x10, "H")
     file_descriptor_flag = get_byte_struct(data, ">", 0x12, "H")
     fdm = tales.FILE_DESCRIPTOR_MINIMUM
     assert file_descriptor_flag & fdm == fdm, "Least bitflag set not matched!"
-    assert get_byte_struct(data, "<", 0x14, "I") == 0x0, "Should be reserved!"
-
-    string_table_offset = get_byte_struct(data, ">", 0x18, "I")
+    assert get_byte_struct(data, ">", 0x14, "I") == 0x0, "Should be reserved!"
 
     noname_idx = 0
     empty_idx = 0
     last_filename = ""
     mdl_part_count = 0
 
-    for i in range(file_count):
+    for i in list(range(file_count)):
         base_offset = offset = header_size + file_descriptor_size * i
 
         # File Offset
         file_offset = get_byte_struct(data, ">", offset, "I")
-        # print("file_offset", file_offset)
+        logger.debug({"file_offset": file_offset})
         offset += 4
         if file_offset == 0xFFFFFFFF:
-            file_descriptor = get_byte_struct(data, "<", offset, "%dI" % (file_descriptor_size / 4 - 1))
-            print("file_descriptor", file_descriptor)
+            file_descriptor = get_byte_struct(data, ">", offset, "%dI" % (file_descriptor_size / 4 - 1))
+            logger.debug({"file_descriptor": file_descriptor})
             assert not any(file_descriptor), "Empty file descriptor, other fields should all be zero!"
+
+        # File Size
+        offset += 4
+        real_file_size = get_byte_struct(data, ">", offset, "I")
+        logger.debug({"real_file_size": real_file_size})
+        offset += 4
+
+        # File Data
+        file_data = data[file_offset: file_offset + real_file_size]
+
+        # File Name
+        if file_descriptor_flag & tales.FILE_DESCRIPTOR_FILE_NAME:
+            file_name = get_byte_struct(data, ">", offset, "32s").rstrip(b"\x00").upper()
+            logger.debug({
+                "msg": "file_descriptor_flag & tales.FILE_DESCRIPTOR_FILE_NAME",
+                "file_name": file_name,
+            })
+            offset += 0x20
         else:
-            # File Size
-            real_file_size = get_byte_struct(data, ">", offset, "I")
-            print("real_file_size", real_file_size)
-            offset += 4
-            # File Data
-            file_data = data[file_offset: file_offset + real_file_size]
-            # # File Name
-            print("file_descriptor_flag", file_descriptor_flag, tales.FILE_DESCRIPTOR_FILE_NAME)
-            if file_descriptor_flag & tales.FILE_DESCRIPTOR_FILE_NAME:
-                file_name = get_byte_struct(data, ">", offset, "32s")
-                file_name.rstrip("\x00").upper()
-                print("file_name", file_name)
-                offset += 0x20
-            else:
-                file_name = ""
-            if not file_name and (last_filename.endswith(".SPM") or last_filename.endswith(".TXM")):
-                file_name = last_filename[:-1] + "V"
-                print("file_name", file_name)
-            # # File Ext
-            if "." in file_name and (not file_name.endswith(".DAT")):
-                ext = "." + file_name.split(".")[-1]
-            elif real_file_size > 0:
-                file_type = get_byte_struct(file_data, ">", 0x0, "I")
-                print("file_type", file_type)
-                # Short Ext
-                ext = tales.TYPE_2_EXT.get(file_type)
-                print("ext", ext)
-                # Long Ext
-                if ext is None and get_byte_struct(file_data, ">", 0x0, "8s").rstrip("\x00\x20") in tales.LONG_TYPES:
-                    ext = "." + get_byte_struct(file_data, ">", 0x0, "8s").rstrip("\x00\x20")
-                elif ext is None:
-                    ext = ""
-                # == DEBUG EXTENSION TYPE ==
-                # ext_debug_msg = (f"Unknown extension type!"
-                #                  f" 0x{file_type} or {file_data[:4]} or {file_data[:8]} @ 0x{file_offset}")
-                # raise Exception(ext_debug_msg)
-            else:
+            file_name = ""
+        if not file_name and (last_filename.endswith(".SPM") or last_filename.endswith(".TXM")):
+            file_name = last_filename[:-1] + "V"
+
+        # File Ext
+        if "." in file_name and (not file_name.endswith(".DAT")):
+            ext = "." + file_name.split(".")[-1]
+            logger.debug({
+                "msg": "File Extension",
+                "ext": ext,
+            })
+        elif real_file_size > 0:
+            file_type = get_byte_struct(file_data, ">", 0x0, "I")
+            # Short Ext
+            ext = tales.TYPE_2_EXT.get(file_type)
+            logger.debug({
+                "msg": "Short File Extension",
+                "ext": ext,
+            })
+            # Long Ext/Types
+            long_getter = get_byte_struct(file_data, ">", 0x0, "8s")
+            long_ext_identifier = long_getter.rstrip(b"\x00\x20")
+            logger.debug({
+                "msg": "Long File Extension/Types",
+                "long_ext_identifier": long_ext_identifier,
+            })
+            if ext is None and long_ext_identifier in tales.LONG_TYPES:
+                ext = "." + long_ext_identifier.decode()
+                logger.debug({
+                    "msg": "Long File Extension/Types Decoded",
+                    "ext": ext,
+                })
+            if ext is None:
                 ext = ""
-            if mdl_part_count > 0 and not file_name:
-                file_name = os.path.splitext(last_filename)[0] + ext
-                print("file_name", file_name)
-            mdl_part_count -= 1
-            # TODO: Resume refactoring FPS4 splitter
+        else:
+            ext = ""
+        if mdl_part_count > 0 and not file_name:
+            file_name = os.path.splitext(last_filename)[0] + ext
+        mdl_part_count -= 1
+
+        # Resolve file name by various hint
+        # TODO: Figure out why some NONAME file are skipped compared to Python 2 script
+        if not file_name:
+            if real_file_size == 0:
+                file_name = f"EMPTY{empty_idx}"
+                logger.debug({"file_name, EMPTY": file_name})
+                empty_idx += 1
+            else:
+                file_name = f"NONAME{noname_idx}{ext}"
+                logger.debug({"file_name, NONAME": file_name})
+                noname_idx += 1
+
+        # Unknown: bit4
+        if file_descriptor_flag & tales.FILE_DESCRIPTOR_BIT4:
+            unk = get_byte_struct(data, ">", offset, "I")
+            if unk != 0:
+                raise Exception(f"unk field = 0x{unk} @ offset = 0x{offset}")
+            offset += 0x4
+
+        # Datatype, e.g.MDL
+        if file_descriptor_flag & tales.FILE_DESCRIPTOR_DATA_TYPE:
+            data_type = get_byte_struct(data, ">", offset, "4s").rstrip(b"\x00")
+            offset += 0x4
+        else:
+            data_type = ""
+        if data_type == "MDL":
+            mdl_part_count = 9
+
+        # Argument
+        arg = ""
+        if file_descriptor_flag & tales.FILE_DESCRIPTOR_ARG:
+            arg_off = get_byte_struct(data, ">", offset, "I")
+            logger.debug({"arg_off": arg_off})
+            offset += 0x4
+            string_table_offset = get_byte_struct(data, ">", 0x18, "I")
+            if arg_off > 0:
+                assert arg_off >= string_table_offset, f"Invalid arg offset {hex(arg_off)}"
+                arg = data[arg_off: data.find(b"\x00", arg_off)]
+                logger.debug({"arg": arg})
+
+        # Path hint
+        if arg:
+            decoded_arg = arg.decode()
+            if ext in (".FPS4", ".T8BTMO"):
+                file_name = decoded_arg.replace("/", "_") + ext
+            elif ext in (".ANM", ".BLD", ".CLS", ".HRC", ".MTR", ".SHD", ".SPM", ".SPV", ".TXM", ".TXV"):
+                if "/" in decoded_arg:
+                    file_name = decoded_arg.replace("/", "_") + ext
+            elif ext in (".TO8FOGD", ".TO8LITD", ".TO8PSTD", ".TO8SKYD", ".TO8WTRD", ".TO8SK2D"):
+                env = decoded_arg
+
+            # Write arg out for manual inspection
+            if not os.path.exists(root):
+                os.mkdir(root)
+            arg_list_filename = os.path.join(root, "arg_list.txt")
+            with open(arg_list_filename, "a+") as f_arg_list:
+                f_arg_list.write(f"{file_name} {decoded_arg}\n")
+
+        # Unknown: bit7
+        if file_descriptor_flag & tales.FILE_DESCRIPTOR_BIT7:
+            unk = get_byte_struct(data, ">", offset, "I")
+            if unk != 0:
+                raise Exception(f"unk field = {hex(unk)} @ offset = {hex(offset)}")
+            offset += 0x4
+
+        indent = f"{'==' * depth}> "
+        if verbose > 0:
+            line = f"off={hex(base_offset)}, name:{file_name}, {hex(file_offset)}~{hex(file_offset + real_file_size)}"
+            if arg:
+                line += f", arg:{arg.decode()}"
+            if data_type:
+                line += f", data_type:{data_type}"
+            print(indent + line + "\n")
+
+        # Make output folder
+        new_file_path = os.path.join(root, file_name)
+        if verbose > 1:
+            logger.debug({"new_file_path": new_file_path})
+        new_root = os.path.join(root, os.path.splitext(file_name)[0])
+        file_ext = os.path.splitext(file_name)[1]
+        logger.debug({
+            "root": root,
+            "ext": ext,
+            "file_ext": file_ext,
+        })
+        if ext not in (".ANM", ".BLD", ".CLS", ".HRC", ".MTR", ".SHD", ".SPM", ".SPV", ".TXM", ".TXV"):
+            if ext and os.path.exists(root):
+                logger.debug({
+                    "msg": "Root directory exists",
+                    "path": new_file_path,
+                    "isdir": os.path.isdir(new_file_path),
+                })
+                if not os.path.isdir(new_file_path):
+                    try:
+                        os.mkdir(new_root)
+                        logger.debug({
+                            "msg": "Creating New Directory",
+                            "directory": new_root,
+                        })
+                    except FileExistsError:
+                        logger.warning({
+                            "msg": "File/Directory already exists!",
+                            "file/directory": new_root,
+                        })
+
+        if force_save:
+            with open(os.path.join(root, file_name), "wb") as f:
+                f.write(file_data)
+
+        if os.path.exists(new_file_path):
+            with open(new_file_path, "wb") as f:
+                f.write(file_data)
+            logger.debug({
+                "msg": "Creating File If Exists",
+                "file": new_file_path,
+            })
+            continue
+        else:
+            with open(new_file_path, "wb") as f:
+                f.write(file_data)
+            logger.debug({
+                "msg": "Creating File If Not Exists",
+                "file": new_file_path,
+            })
+
+        if os.path.isdir(new_root):
+            logger.debug({
+                "msg": "Need further split/unpack",
+                "new_root": new_root,
+            })
+            need_split = unpack_chara_dat(
+                file_data,
+                root=new_root,
+                depth=depth + 1,
+                verbose=2,
+            )
+
+            if (not need_split) and (not force_save):
+                with open(os.path.join(root, file_name), "wb") as f:
+                    f.write(file_data)
+
+        last_filename = file_name
+        logger.debug({"last_filename": last_filename})
