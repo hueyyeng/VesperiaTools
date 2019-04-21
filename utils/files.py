@@ -22,10 +22,6 @@ def check_fourcc(fourcc, file_path):
     file_path : str
         Path to file
 
-    Returns
-    -------
-    None
-
     """
     if not isinstance(file_path, str) or not os.path.isfile(file_path):
         raise InvalidFileException(file_path)
@@ -41,13 +37,15 @@ def check_fourcc(fourcc, file_path):
         raise InvalidFourCCException(fourcc, file_fourcc)
 
 
-def unpack_dat(dat_path, deep_extract=False):
+def unpack_dat(dat_path, decompress_only=False, deep_extract=False):
     """Unpack DAT file from SVO package
 
     Parameters
     ----------
     dat_path : str
         Path to DAT file (e.g. 'path/to/PACKAGE.DAT')
+    decompress_only : bool
+        Decompress TLZC package only without further unpacking
     deep_extract : bool
         True to extract deeper for digit only package (e.g. "0000")
 
@@ -70,6 +68,8 @@ def unpack_dat(dat_path, deep_extract=False):
         "cmd": tlzc_command,
     })
     subprocess.check_call(tlzc_command)
+    if decompress_only:
+        return
 
     # 2.2 Unpack FPS4 package using HyoutaTools
     pkg_dir = os.path.split(dat_path)[0]
@@ -80,6 +80,7 @@ def unpack_dat(dat_path, deep_extract=False):
     fps4e_command = f"{HYOUTATOOLS} ToVfps4e {pkg_decompressed_path}"
     logger.debug({
         "cmd": fps4e_command,
+        "file": pkg_decompressed,
     })
     subprocess.check_call(fps4e_command)
 
@@ -120,9 +121,6 @@ def get_byte_struct(data, endian, offset, fmt):
     fmt : str
         Format string
 
-    Returns
-    -------
-
     Notes
     -----
     Makes parsing data a lot easier - delguoqing
@@ -138,25 +136,67 @@ def get_byte_struct(data, endian, offset, fmt):
     return result
 
 
-def unpack_chara_dat(data, root=".", depth=0, verbose=1, force_save=False):
+def cleanup_leftover_files(dir_path, cleanup_files):
+    """Cleanup leftover files after decompression
+
+    Parameters
+    ----------
+    dir_path : str
+        Directory path containing the files to be cleanup
+    cleanup_files : list or tuple
+        List/tuple of file names
+
+    """
+    files = os.listdir(dir_path)
+    for cleanup_file in cleanup_files:
+        if cleanup_file in files:
+            file_path = os.path.join(dir_path, cleanup_file)
+            logger.debug({
+                "msg": "Removing unpacked file",
+                "file_path": file_path,
+            })
+            os.remove(file_path)
+    logger.info({
+        "msg": "Done cleanup leftover cleanup_files",
+        "cleanup_files": files,
+    })
+
+
+def unpack_chara_dat(data, root=".", create_output_dir=False, depth=0, verbose=1, force_save=False):
     """Unpack DAT file from chara.svo package
 
     Parameters
     ----------
     data : str or bytes
-        Path to DAT file (e.g. 'path/to/0000')
+        Path to DAT file (e.g. 'path/to/XXX_C###.DAT')
     root : str
         The root path for unpacking
+    create_output_dir : bool
+        Create output dir using DAT name
     depth : int
-        Level of depth for unpacking
+        Depth indicator during unpacking.
     verbose : int
     force_save : bool
 
-    Returns
-    -------
-
     """
-    # 1. Load mesh file and check if FPS4
+    # 1.1 Create output directory using input data name
+    if create_output_dir:
+        unpack_dir_path = os.path.splitext(data)[0]
+        root = unpack_dir_path
+        if os.path.isfile(data):
+            try:
+                os.mkdir(unpack_dir_path)
+                logger.debug({
+                    "msg": "Creating directory using package name",
+                    "dir_path": unpack_dir_path,
+                })
+            except FileExistsError:
+                logger.debug({
+                    "msg": "Output directory already exists!",
+                    "dir_path": unpack_dir_path,
+                })
+
+    # 1.2 Load mesh file and check if FPS4
     if isinstance(data, str) and os.path.isfile(data):
         logger.debug({"data_path": data})
         check_fourcc("FPS4", data)
@@ -174,7 +214,6 @@ def unpack_chara_dat(data, root=".", depth=0, verbose=1, force_save=False):
     })
     assert header_size == 0x1C, "Header size should be a constant"
 
-    file_descriptor_size = get_byte_struct(data, ">", 0x10, "H")
     file_descriptor_flag = get_byte_struct(data, ">", 0x12, "H")
     fdm = tales.FILE_DESCRIPTOR_MINIMUM
     assert file_descriptor_flag & fdm == fdm, "Least bitflag set not matched!"
@@ -185,7 +224,8 @@ def unpack_chara_dat(data, root=".", depth=0, verbose=1, force_save=False):
     last_filename = ""
     mdl_part_count = 0
 
-    for i in list(range(file_count)):
+    file_descriptor_size = get_byte_struct(data, ">", 0x10, "H")
+    for i in range(file_count):
         base_offset = offset = header_size + file_descriptor_size * i
 
         # File Offset
@@ -195,7 +235,7 @@ def unpack_chara_dat(data, root=".", depth=0, verbose=1, force_save=False):
         if file_offset == 0xFFFFFFFF:
             file_descriptor = get_byte_struct(data, ">", offset, "%dI" % (file_descriptor_size / 4 - 1))
             logger.debug({"file_descriptor": file_descriptor})
-            assert not any(file_descriptor), "Empty file descriptor, other fields should all be zero!"
+            # assert not any(file_descriptor), "Empty file descriptor, other fields should all be zero!"
 
         # File Size
         offset += 4
@@ -300,10 +340,10 @@ def unpack_chara_dat(data, root=".", depth=0, verbose=1, force_save=False):
             decoded_arg = arg.decode()
             if ext in (".FPS4", ".T8BTMO"):
                 file_name = decoded_arg.replace("/", "_") + ext
-            elif ext in (".ANM", ".BLD", ".CLS", ".HRC", ".MTR", ".SHD", ".SPM", ".SPV", ".TXM", ".TXV"):
+            elif ext in tales.KNOWN_EXT:
                 if "/" in decoded_arg:
                     file_name = decoded_arg.replace("/", "_") + ext
-            elif ext in (".TO8FOGD", ".TO8LITD", ".TO8PSTD", ".TO8SKYD", ".TO8WTRD", ".TO8SK2D"):
+            elif ext in tales.LONG_TYPES[-6:]:
                 env = decoded_arg
 
             # Write arg out for manual inspection
@@ -331,8 +371,7 @@ def unpack_chara_dat(data, root=".", depth=0, verbose=1, force_save=False):
 
         # Make output folder
         new_file_path = os.path.join(root, file_name)
-        if verbose > 1:
-            logger.debug({"new_file_path": new_file_path})
+        logger.debug({"new_file_path": new_file_path})
         new_root = os.path.join(root, os.path.splitext(file_name)[0])
         file_ext = os.path.splitext(file_name)[1]
         logger.debug({
@@ -340,7 +379,7 @@ def unpack_chara_dat(data, root=".", depth=0, verbose=1, force_save=False):
             "ext": ext,
             "file_ext": file_ext,
         })
-        if ext not in (".ANM", ".BLD", ".CLS", ".HRC", ".MTR", ".SHD", ".SPM", ".SPV", ".TXM", ".TXV"):
+        if ext not in tales.KNOWN_EXT:
             if ext and os.path.exists(root):
                 logger.debug({
                     "msg": "Root directory exists",
@@ -368,7 +407,7 @@ def unpack_chara_dat(data, root=".", depth=0, verbose=1, force_save=False):
             with open(new_file_path, "wb") as f:
                 f.write(file_data)
             logger.debug({
-                "msg": "Creating File If Exists",
+                "msg": "Creating File If Exists and Continue",
                 "file": new_file_path,
             })
             continue
@@ -389,7 +428,6 @@ def unpack_chara_dat(data, root=".", depth=0, verbose=1, force_save=False):
                 file_data,
                 root=new_root,
                 depth=depth + 1,
-                verbose=2,
             )
 
             if (not need_split) and (not force_save):

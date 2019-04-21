@@ -2,20 +2,44 @@ def bit(x):
     return 1 << x
 
 
+UNPACKED_LEFTOVER_FILES = (
+    'EMPTY0',
+    'NONAME0.FPS4',
+    'NONAME1.FPS4',
+    'NONAME2.FPS4',
+    'NONAME3.FPS4',
+)
+
+
 TYPE_2_EXT = {
-    0x54525348: ".TER",
     0x00000400: ".ANM",
-    0x00030000: ".MTR",
     0x00050000: ".BLD",
     0x00060000: ".CLS",
+    0x46505334: ".FPS4",
     0x00000100: ".HRC",
+    0x00030000: ".MTR",
     0x00040000: ".SHD",
     0x00010000: ".SPM",
+    0x54525348: ".TER",
     0x00020000: ".TXM",
-    0x46505334: ".FPS4",
 }
 
-LONG_TYPES = {
+
+KNOWN_EXT = (
+    ".ANM",
+    ".BLD",
+    ".CLS",
+    ".HRC",
+    ".MTR",
+    ".SHD",
+    ".SPM",
+    ".SPV",
+    ".TXM",
+    ".TXV",
+)
+
+
+LONG_TYPES = (
     "SCFOMBIN",
     "T8BTMO",
     "T8BTAT",
@@ -42,7 +66,7 @@ LONG_TYPES = {
     "TO8SKYD",  # tales of 8, sky data
     "TO8WTRD",  # tales of 8, water data
     "TO8SK2D",  # tales of 8, sky2 data
-}
+)
 
 # File descriptor flags
 FILE_DESCRIPTOR_FILE_OFFSET = bit(0)
