@@ -2,6 +2,7 @@
 ### HyoutaTools and Dev
 hyoutatools/
 _tmp/
+*.log
 
 ### Dropbox template
 # Dropbox settings and caches
