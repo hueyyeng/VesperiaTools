@@ -1,3 +1,4 @@
+"""Vesperia Tools Textures"""
 import os
 import logging
 import subprocess
@@ -17,10 +18,6 @@ def extract_textures_from_package(package_path):
         Path to DAT file (e.g. 'path/to/PACKAGE.DAT')
         or directory containing TXM and TXV files.
 
-    Returns
-    -------
-    None
-
     Notes
     -----
     Currently uses HyoutaTools to perform extraction.
@@ -33,7 +30,7 @@ def extract_textures_from_package(package_path):
         textures_path = unpack_dat(package_path)
 
     # 2. Search for TXM files recursively and decode it
-    for root, dirs, files in os.walk(textures_path):
+    for root, _dirs, files in os.walk(textures_path):
         for file in files:
             if file.endswith(("TXM",)):
                 texture_filename = os.path.splitext(file)[0]
@@ -45,4 +42,4 @@ def extract_textures_from_package(package_path):
                 })
                 subprocess.check_call(texture_decode_command)
 
-    logger.debug("Process completed")
+    logger.debug("Extract DDS textures completed")

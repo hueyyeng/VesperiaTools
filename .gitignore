@@ -1,7 +1,8 @@
 # Created by .ignore support plugin (hsz.mobi)
-### HyoutaTools and Dev
+### HyoutaTools and Dev Stuff
 hyoutatools/
 _tmp/
+logs/
 *.log
 
 ### Dropbox template

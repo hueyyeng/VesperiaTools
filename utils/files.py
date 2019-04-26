@@ -1,3 +1,4 @@
+"""Vesperia Tools Files Exceptions"""
 import os
 import logging
 import struct
@@ -10,6 +11,9 @@ from exceptions.files import (
 )
 
 logger = logging.getLogger(__name__)
+fh = logging.FileHandler('vesperia_tools_debug.log')
+fh.setLevel(logging.DEBUG)
+logger.addHandler(fh)
 
 
 def check_fourcc(fourcc, file_path):
@@ -27,6 +31,7 @@ def check_fourcc(fourcc, file_path):
         raise InvalidFileException(file_path)
     file_header = open(file_path, "rb").read(32)
     file_fourcc = file_header[:4]
+
     # Check file's FOURCC with expected FOURCC in bytes representation
     if file_fourcc != fourcc.encode('utf-8'):
         logger.warning({
@@ -147,9 +152,13 @@ def cleanup_leftover_files(dir_path, cleanup_files):
         List/tuple of file names
 
     """
+    if os.path.splitext(dir_path)[1] == ".dec":
+        dir_path = os.path.splitext(dir_path)[0]
+    removed_files = []
     files = os.listdir(dir_path)
     for cleanup_file in cleanup_files:
         if cleanup_file in files:
+            removed_files.append(cleanup_file)
             file_path = os.path.join(dir_path, cleanup_file)
             logger.debug({
                 "msg": "Removing unpacked file",
@@ -158,7 +167,7 @@ def cleanup_leftover_files(dir_path, cleanup_files):
             os.remove(file_path)
     logger.info({
         "msg": "Done cleanup leftover cleanup_files",
-        "cleanup_files": files,
+        "cleanup_files": removed_files,
     })
 
 
@@ -269,10 +278,11 @@ def unpack_chara_dat(data, root=".", create_output_dir=False, depth=0, verbose=1
         elif real_file_size > 0:
             file_type = get_byte_struct(file_data, ">", 0x0, "I")
             # Short Ext
-            ext = tales.TYPE_2_EXT.get(file_type)
+            ext = tales.TYPE_2_EXT_PC.get(file_type)
             logger.debug({
                 "msg": "Short File Extension",
                 "ext": ext,
+                "file_type": hex(file_type),
             })
             # Long Ext/Types
             long_getter = get_byte_struct(file_data, ">", 0x0, "8s")
@@ -407,7 +417,7 @@ def unpack_chara_dat(data, root=".", create_output_dir=False, depth=0, verbose=1
             with open(new_file_path, "wb") as f:
                 f.write(file_data)
             logger.debug({
-                "msg": "Creating File If Exists and Continue",
+                "msg": "Creating File - If Exists and Continue",
                 "file": new_file_path,
             })
             continue
@@ -415,7 +425,7 @@ def unpack_chara_dat(data, root=".", create_output_dir=False, depth=0, verbose=1
             with open(new_file_path, "wb") as f:
                 f.write(file_data)
             logger.debug({
-                "msg": "Creating File If Not Exists",
+                "msg": "Creating File - If Not Exists",
                 "file": new_file_path,
             })
 

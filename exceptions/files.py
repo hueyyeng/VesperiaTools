@@ -1,3 +1,6 @@
+"""VesperiaTools Exceptions."""
+
+
 class InvalidFileException(Exception):
     def __init__(self, file_path):
         Exception.__init__(self, f"Invalid file or file path: {file_path}")

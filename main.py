@@ -1,7 +1,19 @@
+import os
+import glob
 import logging
-from textures import extract_textures_from_package
+from utils.exporter import export_wavefront_obj
+from utils.files import unpack_dat
 
 logging.basicConfig(level=logging.DEBUG)
 
-path = "I:/TOV/PC/map/TITLEGAMEOVER.DAT"
-extract_textures_from_package(path)
+
+BG_SINGLE_MESH_SPM = "I:\TOV\PC\map\CAOT00.DAT.dec.ext\MDL_CAO_T00_T03HOUSE.SPM"
+# DAT_FILE =
+tmp_path = "I:/TOV/_tmp"
+
+
+export_wavefront_obj(BG_SINGLE_MESH_SPM, tmp_path)
+
+# packages = glob.glob("I:/TOV/PC/map/C*.DAT")
+# for package in packages:
+#     unpack_dat(package, deep_extract=True)
