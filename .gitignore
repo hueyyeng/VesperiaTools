@@ -1,6 +1,9 @@
 # Created by .ignore support plugin (hsz.mobi)
-# HyoutaTools
+### HyoutaTools and Dev Stuff
 hyoutatools/
+_tmp/
+logs/
+*.log
 
 ### Dropbox template
 # Dropbox settings and caches
@@ -9,6 +12,9 @@ hyoutatools/
 .dropbox.cache
 
 # IntelliJ project files
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
 .idea
 *.iml
 out
