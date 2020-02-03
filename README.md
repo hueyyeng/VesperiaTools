@@ -31,7 +31,7 @@ Place the compiled executables and DLLs into `hyoutatools` directory at root lev
 
 ## Credits
 - __[Admiral Curtiss](https://github.com/AdmiralCurtiss)__
-  - For creating HyoutaTools and figuring out the quirky unpacking method for PC Vesperia Definitive Edition (refer to the issue that I raised on the repo).
+  - For creating HyoutaTools and figuring out the quirky unpacking method for PC Vesperia Definitive Edition [Link To Raised Issue](https://github.com/AdmiralCurtiss/HyoutaTools/issues/7).
   - GitHub repo: [HyoutaTools](https://github.com/AdmiralCurtiss/HyoutaTools)
 - __[delguoqing](https://github.com/delguoqing)__
   - For sharing the Python 2 script that he wrote for extracting character meshes and textures for Xbox 360 Vesperia version.
