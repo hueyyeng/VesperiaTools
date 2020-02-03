@@ -1,17 +1,14 @@
 """Vesperia Tools Files Exceptions"""
-import os
 import logging
+import os
 import struct
 import subprocess
+from exceptions.files import InvalidFileException, InvalidFourCCException
 
 from constants import HYOUTATOOLS, tales
-from exceptions.files import (
-    InvalidFileException,
-    InvalidFourCCException,
-)
 
 logger = logging.getLogger(__name__)
-fh = logging.FileHandler('vesperia_tools_debug.log')
+fh = logging.FileHandler('logs/vesperia_tools.log')
 fh.setLevel(logging.DEBUG)
 logger.addHandler(fh)
 
@@ -42,15 +39,35 @@ def check_fourcc(fourcc, file_path):
         raise InvalidFourCCException(fourcc, file_fourcc)
 
 
-def unpack_dat(dat_path, decompress_only=False, deep_extract=False):
+def decompress_tlzc(dat_path):
+    """Decompress TLZC package
+
+    Parameters
+    ----------
+    dat_path : str
+        Path to DAT file (e.g. 'path/to/PACKAGE.DAT')
+
+    Notes
+    -----
+    Currently uses HyoutaTools (Windows only) to perform decompression.
+    Refer to README.md for more details.
+
+    """
+    check_fourcc('TLZC', dat_path)
+    logger.debug({
+        "msg": "Decompressing TLZC package",
+        "dat_path": dat_path,
+    })
+    subprocess.check_call(f"{HYOUTATOOLS} tlzc -d {dat_path}")
+
+
+def unpack_dat(dat_path, deep_extract=False):
     """Unpack DAT file from SVO package
 
     Parameters
     ----------
     dat_path : str
         Path to DAT file (e.g. 'path/to/PACKAGE.DAT')
-    decompress_only : bool
-        Decompress TLZC package only without further unpacking
     deep_extract : bool
         True to extract deeper for digit only package (e.g. "0000")
 
@@ -63,18 +80,10 @@ def unpack_dat(dat_path, decompress_only=False, deep_extract=False):
     """
     # 1. Check if path is valid
     if not os.path.exists(dat_path):
-        logger.warning(f"Package path {dat_path} is invalid!")
         raise InvalidFileException(dat_path)
 
     # 2.1 Decompress TLZC package using HyoutaTools
-    check_fourcc('TLZC', dat_path)
-    tlzc_command = f"{HYOUTATOOLS} tlzc -d {dat_path}"
-    logger.debug({
-        "cmd": tlzc_command,
-    })
-    subprocess.check_call(tlzc_command)
-    if decompress_only:
-        return
+    decompress_tlzc(dat_path)
 
     # 2.2 Unpack FPS4 package using HyoutaTools
     pkg_dir = os.path.split(dat_path)[0]
@@ -101,8 +110,8 @@ def unpack_dat(dat_path, decompress_only=False, deep_extract=False):
         os.rename(old_txv, new_txv)
     elif deep_extract:
         # 3.2 Handle assets like CH which unpacked as "0000", "0001" and so on
-        for file in extracted_files:
-            file_path = os.path.join(pkg_extracted_path, file)
+        for extracted_file in extracted_files:
+            file_path = os.path.join(pkg_extracted_path, extracted_file)
             check_fourcc('FPS4', file_path)
             fps4e_command = f"{HYOUTATOOLS} ToVfps4e {file_path}"
             logger.debug({
@@ -200,7 +209,7 @@ def unpack_chara_dat(data, root=".", create_output_dir=False, depth=0, verbose=1
                     "dir_path": unpack_dir_path,
                 })
             except FileExistsError:
-                logger.debug({
+                logger.error({
                     "msg": "Output directory already exists!",
                     "dir_path": unpack_dir_path,
                 })
@@ -354,7 +363,7 @@ def unpack_chara_dat(data, root=".", create_output_dir=False, depth=0, verbose=1
                 if "/" in decoded_arg:
                     file_name = decoded_arg.replace("/", "_") + ext
             elif ext in tales.LONG_TYPES[-6:]:
-                env = decoded_arg
+                env = decoded_arg  # noqa
 
             # Write arg out for manual inspection
             if not os.path.exists(root):
@@ -434,7 +443,7 @@ def unpack_chara_dat(data, root=".", create_output_dir=False, depth=0, verbose=1
                 "msg": "Need further split/unpack",
                 "new_root": new_root,
             })
-            need_split = unpack_chara_dat(
+            need_split = unpack_chara_dat(  # noqa
                 file_data,
                 root=new_root,
                 depth=depth + 1,
