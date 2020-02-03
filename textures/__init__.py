@@ -20,7 +20,7 @@ def extract_textures_from_package(package_path):
 
     Notes
     -----
-    Currently uses HyoutaTools to perform extraction.
+    Currently uses HyoutaTools (Windows only) to perform extraction.
     Refer to README.md for more details.
 
     """
