@@ -3,14 +3,18 @@ import logging
 import os
 import struct
 import subprocess
-from exceptions.files import InvalidFileException, InvalidFourCCException
+from exceptions.files import (
+    InvalidFileException,
+    InvalidFourCCException,
+)
 
-from constants import HYOUTATOOLS, tales
+from constants.path import HYOUTATOOLS
+from constants import tales
 
 logger = logging.getLogger(__name__)
-fh = logging.FileHandler('logs/vesperia_tools.log')
-fh.setLevel(logging.DEBUG)
-logger.addHandler(fh)
+log_handler = logging.FileHandler('vesperia_tools_debug.log')
+log_handler.setLevel(logging.DEBUG)
+logger.addHandler(log_handler)
 
 
 def check_fourcc(fourcc, file_path):
@@ -37,6 +41,33 @@ def check_fourcc(fourcc, file_path):
             "file_header": str(file_header),
         })
         raise InvalidFourCCException(fourcc, file_fourcc)
+
+
+def extract_svo(svo_path, output_path=''):
+    """Extract SVO package
+
+    Parameters
+    ----------
+    svo_path : str
+        Path to SVO file (e.g. 'path/to/PACKAGE.SVO')
+    output_path: str
+        Path to extracted SVO output. Default value extract to hyoutatools directory.
+
+    Notes
+    -----
+    Currently uses HyoutaTools (Windows only) to perform decompression.
+    Refer to README.md for more details.
+
+    """
+    check_fourcc('FPS4', svo_path)
+    logger.debug({
+        "msg": "Extracting SVO package",
+        "svo_path": svo_path,
+    })
+    command = f"{HYOUTATOOLS} ToVfps4e {svo_path}"
+    if output_path:
+        command = f"{HYOUTATOOLS} ToVfps4e {svo_path} {output_path}"
+    subprocess.check_call(command)
 
 
 def decompress_tlzc(dat_path):
@@ -180,7 +211,14 @@ def cleanup_leftover_files(dir_path, cleanup_files):
     })
 
 
-def unpack_chara_dat(data, root=".", create_output_dir=False, depth=0, verbose=1, force_save=False):
+def unpack_chara_dat(
+        data,
+        root=".",
+        create_output_dir=False,
+        depth=0,
+        verbose=1,
+        force_save=False,
+):
     """Unpack DAT file from chara.svo package
 
     Parameters
