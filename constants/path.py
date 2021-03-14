@@ -1,0 +1,5 @@
+"""Vesperia Tools Path Constants."""
+HYOUTATOOLS = "hyoutatools/HyoutaToolsCLI.exe"
+CONFIG_JSON = "config.json"
+VESPERIA_STEAM_PATH = ""
+VESPERIA_EXTRACT_PATH = ""

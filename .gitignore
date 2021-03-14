@@ -4,6 +4,11 @@ hyoutatools/
 _tmp/
 logs/
 *.log
+config.json
+
+# Virtual Envs
+env/
+venv/
 
 ### Dropbox template
 # Dropbox settings and caches

@@ -14,10 +14,29 @@ _**Refer to Known Issues_
 - Python 3.6+
 - Windows 7 SP1 or newer (for HyoutaTools)
 
+## Running VesperiaTools
+Currently, there is a simple GUI for extracting textures. [Refer to this issue.](https://github.com/hueyyeng/VesperiaTools/issues/6)
+
+![vesperia_tools_screenshot.png](docs/images/vesperia_tools_screenshot.png)
+
+For other features such as extracting the meshes, please checkout v0.1 and read the codes to get an idea on which functions to run.
+
+The use of virtual environment are highly recommended in isolating existing Python environment. Please refer to the steps below:
+```bash
+virtualenv --python python env
+source env/Scripts/activate
+pip install -r requirements.txt
+python main.py
+```
+
+Refer to [https://realpython.com/python-virtual-environments-a-primer/](https://realpython.com/python-virtual-environments-a-primer/) for more details on setting up a virtual environment.
+
 ## Dependencies
 Uses Admiral Curtiss' [HyoutaTools](https://github.com/AdmiralCurtiss/HyoutaTools) to perform certain data extraction. Knowledge of compiling Visual Studio project are required to compile HyoutaTools.
 
-Place the compiled executables and DLLs into `hyoutatools` directory at root level.
+Tested with commit [40549fa](https://github.com/AdmiralCurtiss/HyoutaTools/commit/40549faf61aa662bf05f74f2f9d18dc5877d58cc)
+
+The GUI have a field to specify the path to the compiled `HyoutaToolsCLI.exe`. Make sure the executables and DLLs are located in the same directory.
 
 ## Known Issues
 1. The exported Wavefront OBJ works in 3ds Max 2015 and Houdini 16.5. Maya 2014 can't import the exported Wavefront OBJ due to overlapping face indices value (it is a known quirk for Maya OBJ plugin)
