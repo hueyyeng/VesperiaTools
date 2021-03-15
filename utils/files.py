@@ -8,8 +8,8 @@ from exceptions.files import (
     InvalidFourCCException,
 )
 
-from constants.path import HYOUTATOOLS
 from constants import tales
+from utils.helpers import get_hyoutatools_path
 
 logger = logging.getLogger(__name__)
 log_handler = logging.FileHandler('vesperia_tools_debug.log')
@@ -64,10 +64,12 @@ def extract_svo(svo_path, output_path=''):
         "msg": "Extracting SVO package",
         "svo_path": svo_path,
     })
-    command = f"{HYOUTATOOLS} ToVfps4e {svo_path}"
+    hyoutatools_path = get_hyoutatools_path()
+    command = f"{hyoutatools_path} ToVfps4e {svo_path}"
     if output_path:
-        command = f"{HYOUTATOOLS} ToVfps4e {svo_path} {output_path}"
+        command = f"{hyoutatools_path} ToVfps4e {svo_path} {output_path}"
     subprocess.check_call(command)
+    logger.info(f"Extract SVO completed.")
 
 
 def decompress_tlzc(dat_path):
@@ -89,7 +91,9 @@ def decompress_tlzc(dat_path):
         "msg": "Decompressing TLZC package",
         "dat_path": dat_path,
     })
-    subprocess.check_call(f"{HYOUTATOOLS} tlzc -d {dat_path}")
+    hyoutatools_path = get_hyoutatools_path()
+    subprocess.check_call(f"{hyoutatools_path} tlzc -d {dat_path}")
+    logger.info(f"Decompress TLZC completed.")
 
 
 def unpack_dat(dat_path, deep_extract=False):
@@ -122,7 +126,8 @@ def unpack_dat(dat_path, deep_extract=False):
     pkg_decompressed = f"{pkg_name}.dec"
     pkg_decompressed_path = os.path.join(pkg_dir, pkg_decompressed)
     check_fourcc('FPS4', pkg_decompressed_path)
-    fps4e_command = f"{HYOUTATOOLS} ToVfps4e {pkg_decompressed_path}"
+    hyoutatools_path = get_hyoutatools_path()
+    fps4e_command = f"{hyoutatools_path} ToVfps4e {pkg_decompressed_path}"
     logger.debug({
         "cmd": fps4e_command,
         "file": pkg_decompressed,
@@ -144,12 +149,13 @@ def unpack_dat(dat_path, deep_extract=False):
         for extracted_file in extracted_files:
             file_path = os.path.join(pkg_extracted_path, extracted_file)
             check_fourcc('FPS4', file_path)
-            fps4e_command = f"{HYOUTATOOLS} ToVfps4e {file_path}"
+            fps4e_command = f"{hyoutatools_path} ToVfps4e {file_path}"
             logger.debug({
                 "cmd": fps4e_command,
             })
             subprocess.check_call(fps4e_command)
 
+    logger.info(f"Unpack DAT completed.")
     return pkg_extracted_path
 
 
