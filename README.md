@@ -25,7 +25,7 @@ The use of virtual environment are highly recommended in isolating existing Pyth
 ```bash
 virtualenv --python python env
 source env/Scripts/activate
-pip install -r requirements.txt
+pip install -r requirements/base.txt
 python main.py
 ```
 

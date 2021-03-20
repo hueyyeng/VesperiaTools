@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2021-03-13
+### Core
+- Minor README.md update
+- Update GUI for Unpack DAT and Unpack SVO
+
 ## [0.1.1] - 2021-03-13
 ### Core
 - Update README.md
