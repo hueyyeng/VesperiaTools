@@ -56,4 +56,4 @@ def extract_textures(package_path: str):
             "the same name exists in the directory."
         )
     else:
-        logger.debug(f"Extract DDS textures completed. Found {found_txm_txv} TXM/TXV pairing files.")
+        logger.info(f"Extract DDS textures completed. Found {found_txm_txv} TXM/TXV pairing files.")
