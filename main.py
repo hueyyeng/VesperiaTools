@@ -7,25 +7,25 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
-from constants.ui import GITHUB_REPO_URL
 from constants.path import CONFIG_JSON
-from utils.helpers import (
-    create_config_json,
-    get_hyoutatools_path,
-    set_hyoutatools_path,
-    get_txm_txv_path,
-    set_txm_txm_path,
-    get_dat_path,
-    set_dat_path,
-    get_svo_path,
-    set_svo_path,
-)
-from utils.log import OutLog
-from utils.textures import extract_textures
+from constants.ui import GITHUB_REPO_URL
 from utils.files import (
     extract_svo,
     unpack_dat,
 )
+from utils.helpers import (
+    create_config_json,
+    get_dat_path,
+    get_hyoutatools_path,
+    get_svo_path,
+    get_txm_txv_path,
+    set_dat_path,
+    set_hyoutatools_path,
+    set_svo_path,
+    set_txm_txm_path,
+)
+from utils.log import OutLog
+from utils.textures import extract_textures
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -78,6 +78,12 @@ class MainWindow(QWidget):
         self.txm_txv_label = QLabel("TXM/TXV Path: ")
         self.txm_txv_layout.addWidget(self.txm_txv_label)
         self.txm_txv_path_lineedit = QLineEdit()
+        self.txm_txv_path_lineedit.setToolTip(
+            "The TXM/TXV path must contains both TXM and TXV files "
+            "of the same name."
+            "\n\n"
+            "E.g.: CAPTEX.TXM and CAPTEX.TXV"
+        )
         self.txm_txv_layout.addWidget(self.txm_txv_path_lineedit)
         self.txm_txv_browser_btn = QToolButton()
         self.txm_txv_browser_btn.setText("...")
@@ -92,9 +98,12 @@ class MainWindow(QWidget):
         self.main_layout.addLayout(self.txm_txv_layout)
 
     def build_ui_extract_textures(self):
-        self.extract_textures_btn = QPushButton("Extract Textures from TXM/TXV")
+        self.extract_textures_layout = QHBoxLayout()
+        self.extract_textures_btn = QPushButton(" Extract Textures from TXM/TXV ")
         self.extract_textures_btn.clicked.connect(self.run_extract_textures)
-        self.main_layout.addWidget(self.extract_textures_btn)
+        self.extract_textures_layout.addStretch(0)
+        self.extract_textures_layout.addWidget(self.extract_textures_btn)
+        self.main_layout.addLayout(self.extract_textures_layout)
 
     def build_ui_dat_path(self):
         self.dat_path_layout = QHBoxLayout()
@@ -116,9 +125,12 @@ class MainWindow(QWidget):
         self.main_layout.addLayout(self.dat_path_layout)
 
     def build_ui_unpack_dat(self):
+        self.unpack_data_layout = QHBoxLayout()
         self.unpack_dat_btn = QPushButton("Unpack DAT")
         self.unpack_dat_btn.clicked.connect(self.run_unpack_dat)
-        self.main_layout.addWidget(self.unpack_dat_btn)
+        self.unpack_data_layout.addStretch(0)
+        self.unpack_data_layout.addWidget(self.unpack_dat_btn)
+        self.main_layout.addLayout(self.unpack_data_layout)
 
     def build_ui_svo_path(self):
         self.svo_path_layout = QHBoxLayout()
@@ -140,9 +152,12 @@ class MainWindow(QWidget):
         self.main_layout.addLayout(self.svo_path_layout)
 
     def build_ui_extract_svo(self):
+        self.extract_svo_layout = QHBoxLayout()
         self.extract_svo_btn = QPushButton("Extract SVO")
         self.extract_svo_btn.clicked.connect(self.run_extract_svo)
-        self.main_layout.addWidget(self.extract_svo_btn)
+        self.extract_svo_layout.addStretch(0)
+        self.extract_svo_layout.addWidget(self.extract_svo_btn)
+        self.main_layout.addLayout(self.extract_svo_layout)
 
     def build_ui_log(self):
         self.log_label = QLabel("Output log:")
@@ -184,7 +199,13 @@ class MainWindow(QWidget):
             title = "Select File"
         if not filter:
             filter = "All Files (*)"
-        file_path = QFileDialog.getOpenFileName(self, title, filter=filter)
+        existing_path = lineedit.text() if lineedit.text() else os.path.expanduser("~")
+        file_path = QFileDialog.getOpenFileName(
+            self,
+            title,
+            existing_path,
+            filter=filter,
+        )
         if file_path[0]:
             lineedit.setText(os.path.normpath(file_path[0]))
 
