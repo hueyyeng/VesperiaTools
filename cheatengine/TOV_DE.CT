@@ -1,0 +1,675 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CheatTable CheatEngineTableVersion="28">
+  <Forms/>
+  <CheatEntries>
+    <CheatEntry>
+      <ID>7</ID>
+      <Description>"Decouple Camera"</Description>
+      <LastState/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{ Game   : TOV_DE.exe
+        Version: 
+        Date   : 2019-08-18
+        Author : Tauke
+
+        This script does blah blah blah
+      }
+
+      define(rot_x_player_address,"TOV_DE.exe"+628088)
+      define(rot_x_bytes,F3 0F 11 47 0C)
+      define(rot_y_player_address,"TOV_DE.exe"+628092)
+      define(rot_y_bytes,F3 0F 11 47 14)
+      define(rot_z_player_address,"TOV_DE.exe"+628097)
+      define(rot_z_bytes,F3 0F 11 4F 10)
+
+      define(pos_x_player_address,"TOV_DE.exe"+62809C)
+      define(pos_x_bytes,F3 0F 11 27)
+      define(pos_y_player_address,"TOV_DE.exe"+6280A0)
+      define(pos_y_bytes,F3 0F 11 5F 04)
+      define(pos_z_player_address,"TOV_DE.exe"+6280A5)
+      define(pos_z_bytes,F3 0F 11 57 08)
+
+      [ENABLE]
+      assert(rot_x_player_address,rot_x_bytes)
+      assert(rot_y_player_address,rot_y_bytes)
+      assert(rot_z_player_address,rot_z_bytes)
+
+      assert(pos_x_player_address,pos_x_bytes)
+      assert(pos_y_player_address,pos_y_bytes)
+      assert(pos_z_player_address,pos_z_bytes)
+
+      rot_x_player_address:
+      db 90 90 90 90 90
+
+      rot_y_player_address:
+      db 90 90 90 90 90
+
+      rot_z_player_address:
+      db 90 90 90 90 90
+
+      pos_x_player_address:
+      db 90 90 90 90
+        
+      pos_y_player_address:
+      db 90 90 90 90 90
+
+      pos_z_player_address:
+      db 90 90 90 90 90
+
+      [DISABLE]
+
+      rot_x_player_address:
+      db rot_x_bytes
+
+      rot_y_player_address:
+      db rot_y_bytes
+
+      rot_z_player_address:
+      db rot_z_bytes
+
+      pos_x_player_address:
+      db pos_x_bytes
+
+      pos_y_player_address:
+      db pos_y_bytes
+
+      pos_z_player_address:
+      db pos_z_bytes
+
+      dealloc(newmem)
+
+      {
+      // ORIGINAL CODE - INJECTION POINT: "TOV_DE.exe"+628088
+
+      "TOV_DE.exe"+628056: 48 8D 4D 90              -  lea rcx,[rbp-70]
+      "TOV_DE.exe"+62805A: E8 E1 CF 13 00           -  call TOV_DE.exe+765040
+      "TOV_DE.exe"+62805F: F3 0F 10 6D 90           -  movss xmm5,[rbp-70]
+      "TOV_DE.exe"+628064: F3 0F 10 55 B8           -  movss xmm2,[rbp-48]
+      "TOV_DE.exe"+628069: F3 0F 10 5D B4           -  movss xmm3,[rbp-4C]
+      "TOV_DE.exe"+62806E: F3 0F 10 65 B0           -  movss xmm4,[rbp-50]
+      "TOV_DE.exe"+628073: F3 0F 10 7D 94           -  movss xmm7,[rbp-6C]
+      "TOV_DE.exe"+628078: F3 44 0F 10 45 98        -  movss xmm8,[rbp-68]
+      "TOV_DE.exe"+62807E: F3 0F 10 45 80           -  movss xmm0,[rbp-80]
+      "TOV_DE.exe"+628083: F3 0F 10 4D 84           -  movss xmm1,[rbp-7C]
+      // ---------- INJECTING HERE ----------
+      "TOV_DE.exe"+628088: F3 0F 11 47 0C           -  movss [rdi+0C],xmm0
+      // ---------- DONE INJECTING  ----------
+      "TOV_DE.exe"+62808D: F3 0F 10 45 88           -  movss xmm0,[rbp-78]
+      "TOV_DE.exe"+628092: F3 0F 11 47 14           -  movss [rdi+14],xmm0
+      "TOV_DE.exe"+628097: F3 0F 11 4F 10           -  movss [rdi+10],xmm1
+      "TOV_DE.exe"+62809C: F3 0F 11 27              -  movss [rdi],xmm4
+      "TOV_DE.exe"+6280A0: F3 0F 11 5F 04           -  movss [rdi+04],xmm3
+      "TOV_DE.exe"+6280A5: F3 0F 11 57 08           -  movss [rdi+08],xmm2
+      "TOV_DE.exe"+6280AA: F3 0F 11 6F 18           -  movss [rdi+18],xmm5
+      "TOV_DE.exe"+6280AF: F3 0F 11 7F 1C           -  movss [rdi+1C],xmm7
+      "TOV_DE.exe"+6280B4: F3 44 0F 11 47 20        -  movss [rdi+20],xmm8
+      "TOV_DE.exe"+6280BA: F3 0F 10 87 A4 01 00 00  -  movss xmm0,[rdi+000001A4]
+      }
+      
+</AssemblerScript>
+      <Hotkeys>
+        <Hotkey>
+          <Action>Toggle Activation</Action>
+          <Keys>
+            <Key>36</Key>
+          </Keys>
+          <ID>0</ID>
+        </Hotkey>
+      </Hotkeys>
+    </CheatEntry>
+    <CheatEntry>
+      <ID>12</ID>
+      <Description>"Player Movement"</Description>
+      <LastState/>
+      <VariableType>Auto Assembler Script</VariableType>
+      <AssemblerScript>{ Game   : TOV_DE.exe
+  Version: 
+  Date   : 2020-11-08
+  Author : Tauke
+
+  This script does blah blah blah
+}
+
+define(player_x_mov_address,"TOV_DE.exe"+57DBFE)
+define(player_x_mov_bytes,F3 0F 11 06)
+define(player_z_mov_address,"TOV_DE.exe"+57DC07)
+define(player_z_mov_bytes,F3 0F 11 46 08)
+
+[ENABLE]
+
+assert(player_x_mov_address,player_x_mov_bytes)
+assert(player_z_mov_address,player_z_mov_bytes)
+
+player_x_mov_address:
+db 90 90 90 90
+
+player_z_mov_address:
+db 90 90 90 90 90
+
+[DISABLE]
+
+player_x_mov_address:
+db player_x_mov_bytes
+
+player_z_mov_address:
+db player_z_mov_bytes
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "TOV_DE.exe"+57DBFE
+
+"TOV_DE.exe"+57DBD0: E8 7B 9E 0B 00           -  call TOV_DE.exe+637A50
+"TOV_DE.exe"+57DBD5: 4C 8D 44 24 3C           -  lea r8,[rsp+3C]
+"TOV_DE.exe"+57DBDA: 48 8D 54 24 30           -  lea rdx,[rsp+30]
+"TOV_DE.exe"+57DBDF: 48 8B 08                 -  mov rcx,[rax]
+"TOV_DE.exe"+57DBE2: 49 89 0C 24              -  mov [r12],rcx
+"TOV_DE.exe"+57DBE6: 48 8D 4D A0              -  lea rcx,[rbp-60]
+"TOV_DE.exe"+57DBEA: E8 51 74 1E 00           -  call TOV_DE.exe+765040
+"TOV_DE.exe"+57DBEF: F3 0F 10 45 A0           -  movss xmm0,[rbp-60]
+"TOV_DE.exe"+57DBF4: 48 8B 44 24 58           -  mov rax,[rsp+58]
+"TOV_DE.exe"+57DBF9: F3 0F 10 4D A4           -  movss xmm1,[rbp-5C]
+// ---------- INJECTING HERE ----------
+"TOV_DE.exe"+57DBFE: F3 0F 11 06              -  movss [rsi],xmm0
+"TOV_DE.exe"+57DC02: F3 0F 10 45 A8           -  movss xmm0,[rbp-58]
+// ---------- DONE INJECTING  ----------
+"TOV_DE.exe"+57DC07: F3 0F 11 46 08           -  movss [rsi+08],xmm0
+"TOV_DE.exe"+57DC0C: F3 0F 11 4E 04           -  movss [rsi+04],xmm1
+"TOV_DE.exe"+57DC11: 48 89 86 40 01 00 00     -  mov [rsi+00000140],rax
+"TOV_DE.exe"+57DC18: 48 8B 44 24 60           -  mov rax,[rsp+60]
+"TOV_DE.exe"+57DC1D: 48 89 86 48 01 00 00     -  mov [rsi+00000148],rax
+"TOV_DE.exe"+57DC24: 48 8B 44 24 68           -  mov rax,[rsp+68]
+"TOV_DE.exe"+57DC29: 48 89 86 50 01 00 00     -  mov [rsi+00000150],rax
+"TOV_DE.exe"+57DC30: E9 A6 00 00 00           -  jmp TOV_DE.exe+57DCDB
+"TOV_DE.exe"+57DC35: 83 8E F4 00 00 00 01     -  or dword ptr [rsi+000000F4],01
+"TOV_DE.exe"+57DC3C: 4C 8D 45 80              -  lea r8,[rbp-80]
+}
+</AssemblerScript>
+      <Hotkeys>
+        <Hotkey>
+          <Action>Toggle Activation</Action>
+          <Keys>
+            <Key>107</Key>
+          </Keys>
+          <ID>0</ID>
+        </Hotkey>
+      </Hotkeys>
+    </CheatEntry>
+  </CheatEntries>
+  <CheatCodes>
+    <CodeEntry>
+      <Description>Code :movss [rdi+0C],xmm0 Main Cam Pos X Rotation</Description>
+      <AddressString>TOV_DE.exe+628088</AddressString>
+      <Before>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>4D</Byte>
+        <Byte>84</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>47</Byte>
+        <Byte>0C</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>45</Byte>
+        <Byte>88</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss [rdi+14],xmm0 Main Cam Pos Y Rotation</Description>
+      <AddressString>TOV_DE.exe+628092</AddressString>
+      <Before>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>45</Byte>
+        <Byte>88</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>47</Byte>
+        <Byte>14</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>4F</Byte>
+        <Byte>10</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss [rdi+10],xmm1 Main Cam Pos Z Rotation</Description>
+      <AddressString>TOV_DE.exe+628097</AddressString>
+      <Before>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>47</Byte>
+        <Byte>14</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>4F</Byte>
+        <Byte>10</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>27</Byte>
+        <Byte>F3</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss [rdi],xmm4 Main Cam Pos X Translation</Description>
+      <AddressString>TOV_DE.exe+62809C</AddressString>
+      <Before>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>4F</Byte>
+        <Byte>10</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>27</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>5F</Byte>
+        <Byte>04</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss [rdi+04],xmm3 Main Cam Pos Z Translation</Description>
+      <AddressString>TOV_DE.exe+6280A0</AddressString>
+      <Before>
+        <Byte>10</Byte>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>27</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>5F</Byte>
+        <Byte>04</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>57</Byte>
+        <Byte>08</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss [rdi+08],xmm2 Main Cam Pos Y Translation</Description>
+      <AddressString>TOV_DE.exe+6280A5</AddressString>
+      <Before>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>5F</Byte>
+        <Byte>04</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>57</Byte>
+        <Byte>08</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>6F</Byte>
+        <Byte>18</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss [rdi+18],xmm5</Description>
+      <AddressString>TOV_DE.exe+6280AA</AddressString>
+      <Before>
+        <Byte>90</Byte>
+        <Byte>90</Byte>
+        <Byte>90</Byte>
+        <Byte>90</Byte>
+        <Byte>90</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>6F</Byte>
+        <Byte>18</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>7F</Byte>
+        <Byte>1C</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss [rdi+1C],xmm7</Description>
+      <AddressString>TOV_DE.exe+6280AF</AddressString>
+      <Before>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>6F</Byte>
+        <Byte>18</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>7F</Byte>
+        <Byte>1C</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>44</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>47</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss [rdi+20],xmm8</Description>
+      <AddressString>TOV_DE.exe+6280B4</AddressString>
+      <Before>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>7F</Byte>
+        <Byte>1C</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>44</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>47</Byte>
+        <Byte>20</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>87</Byte>
+        <Byte>A4</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss xmm0,[rdx] Target Cam 0</Description>
+      <AddressString>TOV_DE.exe+765734</AddressString>
+      <Before>
+        <Byte>CC</Byte>
+        <Byte>48</Byte>
+        <Byte>83</Byte>
+        <Byte>EC</Byte>
+        <Byte>18</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>02</Byte>
+      </Actual>
+      <After>
+        <Byte>48</Byte>
+        <Byte>8B</Byte>
+        <Byte>C1</Byte>
+        <Byte>0F</Byte>
+        <Byte>28</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss xmm0,[rdi+0C] Target Cam A</Description>
+      <AddressString>TOV_DE.exe+627B50</AddressString>
+      <Before>
+        <Byte>FC</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+        <Byte>02</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>47</Byte>
+        <Byte>0C</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>4F</Byte>
+        <Byte>10</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss xmm0,[r8] Target Cam B</Description>
+      <AddressString>TOV_DE.exe+76574E</AddressString>
+      <Before>
+        <Byte>42</Byte>
+        <Byte>08</Byte>
+        <Byte>0F</Byte>
+        <Byte>16</Byte>
+        <Byte>D8</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>41</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>00</Byte>
+      </Actual>
+      <After>
+        <Byte>0F</Byte>
+        <Byte>28</Byte>
+        <Byte>D0</Byte>
+        <Byte>F3</Byte>
+        <Byte>41</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :mov eax,[rdi+0C] Target Cam C</Description>
+      <AddressString>TOV_DE.exe+628467</AddressString>
+      <Before>
+        <Byte>47</Byte>
+        <Byte>08</Byte>
+        <Byte>89</Byte>
+        <Byte>46</Byte>
+        <Byte>08</Byte>
+      </Before>
+      <Actual>
+        <Byte>8B</Byte>
+        <Byte>47</Byte>
+        <Byte>0C</Byte>
+      </Actual>
+      <After>
+        <Byte>89</Byte>
+        <Byte>46</Byte>
+        <Byte>0C</Byte>
+        <Byte>8B</Byte>
+        <Byte>47</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss xmm1,[rbx+30] Rotate Player</Description>
+      <AddressString>TOV_DE.exe+57B5B6</AddressString>
+      <Before>
+        <Byte>E8</Byte>
+        <Byte>3A</Byte>
+        <Byte>89</Byte>
+        <Byte>1D</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>4B</Byte>
+        <Byte>30</Byte>
+      </Actual>
+      <After>
+        <Byte>48</Byte>
+        <Byte>8D</Byte>
+        <Byte>8C</Byte>
+        <Byte>24</Byte>
+        <Byte>E0</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss xmm0,[rdx+08] Player Movement?</Description>
+      <AddressString>TOV_DE.exe+765746</AddressString>
+      <Before>
+        <Byte>42</Byte>
+        <Byte>04</Byte>
+        <Byte>0F</Byte>
+        <Byte>14</Byte>
+        <Byte>D8</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>42</Byte>
+        <Byte>08</Byte>
+      </Actual>
+      <After>
+        <Byte>0F</Byte>
+        <Byte>16</Byte>
+        <Byte>D8</Byte>
+        <Byte>F3</Byte>
+        <Byte>41</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss xmm2,[rbx+04] Player Ground Plane</Description>
+      <AddressString>TOV_DE.exe+57B5DD</AddressString>
+      <Before>
+        <Byte>24</Byte>
+        <Byte>60</Byte>
+        <Byte>01</Byte>
+        <Byte>00</Byte>
+        <Byte>00</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>53</Byte>
+        <Byte>04</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>0B</Byte>
+        <Byte>E8</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss xmm1,[rbx] Player Pos X Read</Description>
+      <AddressString>TOV_DE.exe+57B5E2</AddressString>
+      <Before>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>53</Byte>
+        <Byte>04</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>0B</Byte>
+      </Actual>
+      <After>
+        <Byte>E8</Byte>
+        <Byte>A5</Byte>
+        <Byte>8A</Byte>
+        <Byte>1D</Byte>
+        <Byte>00</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss [rsi],xmm0 Player X Move</Description>
+      <AddressString>TOV_DE.exe+57DBFE</AddressString>
+      <Before>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>4D</Byte>
+        <Byte>A4</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>06</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>45</Byte>
+        <Byte>A8</Byte>
+      </After>
+    </CodeEntry>
+    <CodeEntry>
+      <Description>Code :movss [rsi+08],xmm0 Player Z Move</Description>
+      <AddressString>TOV_DE.exe+57DC07</AddressString>
+      <Before>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>10</Byte>
+        <Byte>45</Byte>
+        <Byte>A8</Byte>
+      </Before>
+      <Actual>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>46</Byte>
+        <Byte>08</Byte>
+      </Actual>
+      <After>
+        <Byte>F3</Byte>
+        <Byte>0F</Byte>
+        <Byte>11</Byte>
+        <Byte>4E</Byte>
+        <Byte>04</Byte>
+      </After>
+    </CodeEntry>
+  </CheatCodes>
+  <UserdefinedSymbols/>
+  <Comments>Info about this table:
+  
+</Comments>
+</CheatTable>

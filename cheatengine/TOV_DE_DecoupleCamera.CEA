@@ -1,0 +1,98 @@
+{ Game   : TOV_DE.exe
+  Version: 
+  Date   : 2019-08-18
+  Author : Tauke
+
+  This script does blah blah blah
+}
+
+define(rot_x_player_address,"TOV_DE.exe"+628088)
+define(rot_x_bytes,F3 0F 11 47 0C)
+define(rot_y_player_address,"TOV_DE.exe"+628092)
+define(rot_y_bytes,F3 0F 11 47 14)
+define(rot_z_player_address,"TOV_DE.exe"+628097)
+define(rot_z_bytes,F3 0F 11 4F 10)
+
+define(pos_x_player_address,"TOV_DE.exe"+62809C)
+define(pos_x_bytes,F3 0F 11 27)
+define(pos_y_player_address,"TOV_DE.exe"+6280A0)
+define(pos_y_bytes,F3 0F 11 5F 04)
+define(pos_z_player_address,"TOV_DE.exe"+6280A5)
+define(pos_z_bytes,F3 0F 11 57 08)
+
+[ENABLE]
+assert(rot_x_player_address,rot_x_bytes)
+assert(rot_y_player_address,rot_y_bytes)
+assert(rot_z_player_address,rot_z_bytes)
+
+assert(pos_x_player_address,pos_x_bytes)
+assert(pos_y_player_address,pos_y_bytes)
+assert(pos_z_player_address,pos_z_bytes)
+
+rot_x_player_address:
+db 90 90 90 90 90
+
+rot_y_player_address:
+db 90 90 90 90 90
+
+rot_z_player_address:
+db 90 90 90 90 90
+
+pos_x_player_address:
+db 90 90 90 90
+  
+pos_y_player_address:
+db 90 90 90 90 90
+
+pos_z_player_address:
+db 90 90 90 90 90
+
+[DISABLE]
+
+rot_x_player_address:
+db rot_x_bytes
+
+rot_y_player_address:
+db rot_y_bytes
+
+rot_z_player_address:
+db rot_z_bytes
+
+pos_x_player_address:
+db pos_x_bytes
+
+pos_y_player_address:
+db pos_y_bytes
+
+pos_z_player_address:
+db pos_z_bytes
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "TOV_DE.exe"+628088
+
+"TOV_DE.exe"+628056: 48 8D 4D 90              -  lea rcx,[rbp-70]
+"TOV_DE.exe"+62805A: E8 E1 CF 13 00           -  call TOV_DE.exe+765040
+"TOV_DE.exe"+62805F: F3 0F 10 6D 90           -  movss xmm5,[rbp-70]
+"TOV_DE.exe"+628064: F3 0F 10 55 B8           -  movss xmm2,[rbp-48]
+"TOV_DE.exe"+628069: F3 0F 10 5D B4           -  movss xmm3,[rbp-4C]
+"TOV_DE.exe"+62806E: F3 0F 10 65 B0           -  movss xmm4,[rbp-50]
+"TOV_DE.exe"+628073: F3 0F 10 7D 94           -  movss xmm7,[rbp-6C]
+"TOV_DE.exe"+628078: F3 44 0F 10 45 98        -  movss xmm8,[rbp-68]
+"TOV_DE.exe"+62807E: F3 0F 10 45 80           -  movss xmm0,[rbp-80]
+"TOV_DE.exe"+628083: F3 0F 10 4D 84           -  movss xmm1,[rbp-7C]
+// ---------- INJECTING HERE ----------
+"TOV_DE.exe"+628088: F3 0F 11 47 0C           -  movss [rdi+0C],xmm0
+// ---------- DONE INJECTING  ----------
+"TOV_DE.exe"+62808D: F3 0F 10 45 88           -  movss xmm0,[rbp-78]
+"TOV_DE.exe"+628092: F3 0F 11 47 14           -  movss [rdi+14],xmm0
+"TOV_DE.exe"+628097: F3 0F 11 4F 10           -  movss [rdi+10],xmm1
+"TOV_DE.exe"+62809C: F3 0F 11 27              -  movss [rdi],xmm4
+"TOV_DE.exe"+6280A0: F3 0F 11 5F 04           -  movss [rdi+04],xmm3
+"TOV_DE.exe"+6280A5: F3 0F 11 57 08           -  movss [rdi+08],xmm2
+"TOV_DE.exe"+6280AA: F3 0F 11 6F 18           -  movss [rdi+18],xmm5
+"TOV_DE.exe"+6280AF: F3 0F 11 7F 1C           -  movss [rdi+1C],xmm7
+"TOV_DE.exe"+6280B4: F3 44 0F 11 47 20        -  movss [rdi+20],xmm8
+"TOV_DE.exe"+6280BA: F3 0F 10 87 A4 01 00 00  -  movss xmm0,[rdi+000001A4]
+}
