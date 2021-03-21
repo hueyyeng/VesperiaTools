@@ -1,25 +1,28 @@
 """Utilities when dealing with meshes."""
-import re
-import os
 import logging
+import os
+import re
+
+from parsers.parser import Node
 
 logger = logging.getLogger(__name__)
 
 
-def face_creation(node, debug=False):
+def face_creation(node: Node, verbose=False):
     """Create faces from decoded mesh attributes.
 
     Parameters
     ----------
     node : Node
-    debug : bool
+    verbose : bool
+        Display mesh's triangles values. Default False.
 
     Notes
     -----
     - Based on delguoqing's Python 2 script for Vesperia 360.
 
     """
-    mesh_lists = node.data["meshList"]
+    mesh_lists = node.data["mesh_list"]
     for mesh_list in mesh_lists:
         for mesh in mesh_list:
             if len(mesh.vertPosList) > 0:
@@ -30,8 +33,7 @@ def face_creation(node, debug=False):
                     "mesh.vertPosList": len(mesh.vertPosList),
                     "mesh.triangleList": len(mesh.triangleList)
                 })
-                logger.debug("")
-            if debug:
+            if verbose:
                 for triangle_idx, triangle in enumerate(mesh.triangleList):
                     logger.debug({
                         "triangle_idx": triangle_idx,
@@ -39,7 +41,7 @@ def face_creation(node, debug=False):
                     })
 
 
-def round_float_value(value, decimal):
+def round_float_value(value: float, decimal: int):
     """Round float value to a specific decimal points.
 
     Parameters
@@ -60,7 +62,7 @@ def round_float_value(value, decimal):
     return rounded_value.format(value)
 
 
-def write_mesh_to_obj(node, output_path):
+def write_mesh_to_obj(node: Node, output_path: str):
     """Write out decoded mesh as Wavefront OBJ file.
 
     Parameters
@@ -74,27 +76,28 @@ def write_mesh_to_obj(node, output_path):
     - Based on delguoqing's Python 2 script for Vesperia 360.
 
     """
-    # TODO: Write out function to combine all OBJs and add face number with consecutive mesh total vertices
+    # TODO: Write out function to combine all OBJs and add face number
+    #  with consecutive mesh total vertices
     if node.name != 'NONAME':
         package_dir_path = os.path.join(output_path, node.name)
         os.makedirs(package_dir_path, exist_ok=True)
         output_path = package_dir_path
 
-    mesh_lists = node.data["meshList"]
+    mesh_lists = node.data["mesh_list"]
     for mesh_list_idx, mesh_list in enumerate(mesh_lists):
         logger.debug("%s>" % ('=' * 200))
         logger.debug("Loop %s" % (mesh_list_idx+1))
 
         mesh_names = []
         for mesh_idx, mesh in enumerate(mesh_list):
-            v = mesh.vertPosList
-            vn = mesh.vertNormList
-            uvs = mesh.vertUVList
+            vertices_pos = mesh.vertPosList
+            vertices_normal = mesh.vertNormList
+            vertices_uvs = mesh.vertUVList
             faces = mesh.triangleList
             logger.debug({
-                "total v": len(v),
-                "total vn": len(vn),
-                "total uvs": len(uvs),
+                "total vertices_pos": len(vertices_pos),
+                "total vertices_normal": len(vertices_normal),
+                "total vertices_uvs": len(vertices_uvs),
                 "total faces": len(faces),
             })
 
@@ -122,20 +125,20 @@ def write_mesh_to_obj(node, output_path):
                 f.write(f"# submesh {mesh_idx+1}: {valid_mesh_name}" + "\n")
                 f.write(f"g {valid_mesh_name}" + "\n")
                 f.write("s 1" + "\n")
-                for vertex in v:
+                for vertex in vertices_pos:
                     x = round_float_value(vertex[0], 6)
                     y = round_float_value(vertex[1], 6)
                     z = round_float_value(vertex[2], 6)
                     f.write(f"v {x} {y} {z}" + "\n")
-                for vertex in vn:
+                for vertex in vertices_normal:
                     x = round_float_value(vertex[0], 6)
                     y = round_float_value(vertex[1], 6)
                     z = round_float_value(vertex[2], 6)
                     f.write(f"vn {x} {y} {z}" + "\n")
-                for uv in uvs:
+                for uv in vertices_uvs:
                     u = round_float_value(uv[0], 6)
-                    v = round_float_value(uv[1], 6)
-                    f.write(f"vt {u} {v}" + "\n")
+                    vertices_pos = round_float_value(uv[1], 6)
+                    f.write(f"vt {u} {vertices_pos}" + "\n")
                 for face_idx, face in enumerate(faces):
                     if face_idx == 0:
                         f.write(f"# group {face['group']}" + "\n")

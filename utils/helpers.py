@@ -12,6 +12,7 @@ def create_config_json():
                 "txm_txv_path": "",
                 "dat_path": "",
                 "svo_path": "",
+                "spm_spv_path": "",
             },
             indent=4,
             sort_keys=True,
@@ -19,11 +20,11 @@ def create_config_json():
         f.write(data)
 
 
-def set_hyoutatools_path(path):
+def set_path(config_key, path):
     with open(CONFIG_JSON, "r") as f:
         data = json.load(f)
 
-    data["hyoutatools_path"] = os.path.normpath(path)
+    data[config_key] = os.path.normpath(path)
     data = json.dumps(
        data,
         indent=4,
@@ -33,71 +34,28 @@ def set_hyoutatools_path(path):
         f.write(data)
 
 
-def get_hyoutatools_path():
+def get_path(config_key):
     with open(CONFIG_JSON, "r") as f:
         data = json.load(f)
-    path = data.get("hyoutatools_path") or ""
+    path = data.get(config_key) or ""
     return os.path.normpath(path)
+
+
+def set_hyoutatools_path(path):
+    set_path("hyoutatools_path", path)
 
 
 def set_txm_txm_path(path):
-    with open(CONFIG_JSON, "r") as f:
-        data = json.load(f)
-
-    data["txm_txv_path"] = os.path.normpath(path)
-    data = json.dumps(
-        data,
-        indent=4,
-        sort_keys=True,
-    )
-    with open(CONFIG_JSON, "w") as f:
-        f.write(data)
-
-
-def get_txm_txv_path():
-    with open(CONFIG_JSON, "r") as f:
-        data = json.load(f)
-    path = data.get("txm_txv_path") or ""
-    return os.path.normpath(path)
+    set_path("txm_txv_path", path)
 
 
 def set_dat_path(path):
-    with open(CONFIG_JSON, "r") as f:
-        data = json.load(f)
-
-    data["dat_path"] = os.path.normpath(path)
-    data = json.dumps(
-        data,
-        indent=4,
-        sort_keys=True,
-    )
-    with open(CONFIG_JSON, "w") as f:
-        f.write(data)
-
-
-def get_dat_path():
-    with open(CONFIG_JSON, "r") as f:
-        data = json.load(f)
-    path = data.get("dat_path") or ""
-    return os.path.normpath(path)
+    set_path("dat_path", path)
 
 
 def set_svo_path(path):
-    with open(CONFIG_JSON, "r") as f:
-        data = json.load(f)
-
-    data["svo_path"] = os.path.normpath(path)
-    data = json.dumps(
-        data,
-        indent=4,
-        sort_keys=True,
-    )
-    with open(CONFIG_JSON, "w") as f:
-        f.write(data)
+    set_path("svo_path", path)
 
 
-def get_svo_path():
-    with open(CONFIG_JSON, "r") as f:
-        data = json.load(f)
-    path = data.get("svo_path") or ""
-    return os.path.normpath(path)
+def set_spm_spv_path(path):
+    set_path("spm_spv_path", path)
