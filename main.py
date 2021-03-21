@@ -9,18 +9,14 @@ from PySide2.QtWidgets import *
 
 from constants.path import CONFIG_JSON
 from constants.ui import GITHUB_REPO_URL
-from utils.files import (
-    extract_svo,
-    unpack_dat,
-)
+from utils.exporter import export_wavefront_obj
+from utils.files import extract_svo, unpack_dat
 from utils.helpers import (
     create_config_json,
-    get_dat_path,
-    get_hyoutatools_path,
-    get_svo_path,
-    get_txm_txv_path,
+    get_path,
     set_dat_path,
     set_hyoutatools_path,
+    set_spm_spv_path,
     set_svo_path,
     set_txm_txm_path,
 )
@@ -42,6 +38,8 @@ class MainWindow(QWidget):
         self.build_ui_unpack_dat()
         self.build_ui_svo_path()
         self.build_ui_extract_svo()
+        self.build_ui_spm_spv_path()
+        self.build_ui_export_spm_spv()
         self.build_ui_log()
         self.build_ui_repo_url()
         self.populate_lineedit_path()
@@ -159,6 +157,33 @@ class MainWindow(QWidget):
         self.extract_svo_layout.addWidget(self.extract_svo_btn)
         self.main_layout.addLayout(self.extract_svo_layout)
 
+    def build_ui_spm_spv_path(self):
+        self.spm_spv_path_layout = QHBoxLayout()
+        self.spm_spv_path_label = QLabel("SPM/SPV Path: ")
+        self.spm_spv_path_layout.addWidget(self.spm_spv_path_label)
+        self.spm_spv_path_lineedit = QLineEdit()
+        self.spm_spv_path_layout.addWidget(self.spm_spv_path_lineedit)
+        self.spm_spv_path_browse_btn = QToolButton()
+        self.spm_spv_path_browse_btn.setText("...")
+        self.spm_spv_path_browse_btn.clicked.connect(
+            partial(
+                self.browse_file,
+                self.spm_spv_path_lineedit,
+                "Path to SPM files",
+                "SPM/SPV Files (*.spm *.spv)",
+            )
+        )
+        self.spm_spv_path_layout.addWidget(self.spm_spv_path_browse_btn)
+        self.main_layout.addLayout(self.spm_spv_path_layout)
+
+    def build_ui_export_spm_spv(self):
+        self.export_spm_spv_layout = QHBoxLayout()
+        self.export_spm_spv_btn = QPushButton(" Export SPM/SPV as Wavefront OBJ ")
+        self.export_spm_spv_btn.clicked.connect(self.run_export_spm_spv)
+        self.export_spm_spv_layout.addStretch(0)
+        self.export_spm_spv_layout.addWidget(self.export_spm_spv_btn)
+        self.main_layout.addLayout(self.export_spm_spv_layout)
+
     def build_ui_log(self):
         self.log_label = QLabel("Output log:")
         self.main_layout.addWidget(self.log_label)
@@ -176,10 +201,11 @@ class MainWindow(QWidget):
 
     def populate_lineedit_path(self):
         if os.path.exists(CONFIG_JSON):
-            self.hyouta_path_lineedit.setText(get_hyoutatools_path())
-            self.txm_txv_path_lineedit.setText(get_txm_txv_path())
-            self.dat_path_lineedit.setText(get_dat_path())
-            self.svo_path_lineedit.setText(get_svo_path())
+            self.hyouta_path_lineedit.setText(get_path("hyoutatools_path"))
+            self.txm_txv_path_lineedit.setText(get_path("txm_txv_path"))
+            self.dat_path_lineedit.setText(get_path("dat_path"))
+            self.svo_path_lineedit.setText(get_path("svo_path"))
+            self.spm_spv_path_lineedit.setText(get_path("spm_spv_path"))
         else:
             create_config_json()
 
@@ -253,11 +279,28 @@ class MainWindow(QWidget):
         self.update_config_json()
         extract_svo(self.svo_path_lineedit.text())
 
+    def run_export_spm_spv(self):
+        spm_spv_path = self.spm_spv_path_lineedit.text()
+        if not spm_spv_path:
+            QMessageBox.warning(
+                self,
+                "Warning",
+                "Please specify SPM/SPV path before exporting!",
+            )
+            return
+        self.update_config_json()
+        output_path, _ = os.path.split(spm_spv_path)
+        export_wavefront_obj(spm_spv_path, output_path)
+
     def update_config_json(self):
         set_hyoutatools_path(self.hyouta_path_lineedit.text())
         set_txm_txm_path(self.txm_txv_path_lineedit.text())
         set_dat_path(self.dat_path_lineedit.text())
         set_svo_path(self.svo_path_lineedit.text())
+        set_spm_spv_path(self.spm_spv_path_lineedit.text())
+
+    def closeEvent(self, event):
+        self.update_config_json()
 
 
 def main():

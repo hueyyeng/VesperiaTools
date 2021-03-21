@@ -4,7 +4,7 @@ import os
 import subprocess
 
 from utils.files import unpack_dat
-from utils.helpers import get_hyoutatools_path
+from utils.helpers import get_path
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def extract_textures(package_path: str):
         textures_path = unpack_dat(package_path)
 
     # 2. Search for TXM files recursively and decode it
-    hyoutatools_path = get_hyoutatools_path()
+    hyoutatools_path = get_path("hyoutatools_path")
     found_txm_txv = 0
     for root, _dirs, files in os.walk(textures_path):
         for file in files:

@@ -9,7 +9,7 @@ from exceptions.files import (
     InvalidFileException,
     InvalidFourCCException,
 )
-from utils.helpers import get_hyoutatools_path
+from utils.helpers import get_path
 
 logger = logging.getLogger(__name__)
 log_handler = logging.FileHandler("vesperia_tools_debug.log")
@@ -87,7 +87,7 @@ def extract_svo(svo_path, output_path=''):
         "msg": "Extracting SVO package",
         "svo_path": svo_path,
     })
-    hyoutatools_path = get_hyoutatools_path()
+    hyoutatools_path = get_path("hyoutatools_path")
     command = f"{hyoutatools_path} ToVfps4e {svo_path}"
     if output_path:
         command = f"{hyoutatools_path} ToVfps4e {svo_path} {output_path}"
@@ -114,7 +114,7 @@ def decompress_tlzc(dat_path):
         "msg": "Decompressing TLZC package",
         "dat_path": dat_path,
     })
-    hyoutatools_path = get_hyoutatools_path()
+    hyoutatools_path = get_path("hyoutatools_path")
     subprocess.check_call(f"{hyoutatools_path} tlzc -d {dat_path}")
     logger.info(f"Decompress TLZC completed.")
 
@@ -134,7 +134,7 @@ def unpack_dat(dat_path, deep_extract=False):
     if not os.path.exists(dat_path):
         raise InvalidFileException(dat_path)
 
-    hyoutatools_path = get_hyoutatools_path()
+    hyoutatools_path = get_path("hyoutatools_path")
     fourcc = get_fourcc(dat_path)
 
     # 2.1 Decompress TLZC package using HyoutaTools
