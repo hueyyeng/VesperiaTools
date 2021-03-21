@@ -2,7 +2,7 @@ import array
 import struct
 
 
-def HalfToFloat(h):
+def half_to_float(h):
     s = int((h >> 15) & 0x00000001)  # sign
     e = int((h >> 10) & 0x0000001f)  # exponent
     f = int(h & 0x000003ff)  # fraction
@@ -28,10 +28,10 @@ def HalfToFloat(h):
     return int((s << 31) | (e << 23) | f)
 
 
-def converthalf2float(h):
-    id = HalfToFloat(h)
-    str = struct.pack('I', id)
-    return struct.unpack('f', str)[0]
+def convert_half_to_float(h):
+    id = half_to_float(h)
+    structure = struct.pack('I', id)
+    return struct.unpack('f', structure)[0]
 
 
 class BinaryUnpacker():
@@ -109,7 +109,7 @@ class BinaryUnpacker():
     def half(self, n, h='h'):
         data = []
         for id in range(n):
-            data.append(converthalf2float(struct.unpack(self.endian + h, self.data[self.offset:self.offset + 2])[0]))
+            data.append(convert_half_to_float(struct.unpack(self.endian + h, self.data[self.offset:self.offset + 2])[0]))
             self.offset += 2
         if self.log:
             self.logData += str(self.offset - n * 2) + ' ' + str(data) + '\n'
@@ -377,7 +377,7 @@ class BinaryReader():
         offset = self.input_file.tell()
         for id in range(n):
             # array.append(converthalf2float(struct.unpack(self.endian+'H',self.inputFile.read(2))[0]))
-            array.append(converthalf2float(struct.unpack(self.endian + h, self.input_file.read(2))[0]))
+            array.append(convert_half_to_float(struct.unpack(self.endian + h, self.input_file.read(2))[0]))
         if self.debug:
             print('half', array)
         if self.log:

@@ -27,7 +27,7 @@ class Node:
         self.offset = None
 
 
-def debug_mesh(node, verbose=False):
+def debug_mesh(node: Node, verbose=False):
     """Debug found mesh from SPM package.
 
     Parameters
@@ -41,9 +41,9 @@ def debug_mesh(node, verbose=False):
         raise Exception("No meshes found!")
     logger.debug("%s>" % ('=' * 200))
     logger.debug({
-        "hashList": node.data['hashList'],  # Important? Probably not for static mesh
+        "hash_list": node.data['hash_list'],  # Important? Probably not for static mesh
     })
-    mesh_lists = node.data["meshList"]
+    mesh_lists = node.data["mesh_list"]
     for idx, mesh_list in enumerate(mesh_lists):
         logger.debug("Total meshes for Loop %s : %s" % (idx + 1, len(mesh_list)))
         for mesh in mesh_list:
@@ -63,7 +63,7 @@ def debug_mesh(node, verbose=False):
         logger.debug("")
 
 
-def getVertexData(mesh, g, v1, v2, v3, v4, n, debug=False):
+def get_vertex_data(mesh, g, v1, v2, v3, v4, n, verbose=False):
     """Get vertex data for skinned mesh.
 
     Parameters
@@ -75,7 +75,7 @@ def getVertexData(mesh, g, v1, v2, v3, v4, n, debug=False):
     v3 : int
     v4 : int
     n : int
-    debug : bool
+    verbose : bool
 
     Notes
     -----
@@ -87,7 +87,7 @@ def getVertexData(mesh, g, v1, v2, v3, v4, n, debug=False):
         mesh.vertPosList.append(g.f(3))
         mesh.vertNormList.append(g.f(3))
         indice_offset = g.tell()
-        if debug:
+        if verbose:
             logger.debug({
                 "v1 v_offset": v_offset,
                 "v1 indice_offset": indice_offset,
@@ -100,7 +100,7 @@ def getVertexData(mesh, g, v1, v2, v3, v4, n, debug=False):
         mesh.vertPosList.append(g.f(3))
         mesh.vertNormList.append(g.f(3))
         indice_offset = g.tell()
-        if debug:
+        if verbose:
             logger.debug({
                 "v2 v_offset": v_offset,
                 "v2 indice_offset": indice_offset,
@@ -115,7 +115,7 @@ def getVertexData(mesh, g, v1, v2, v3, v4, n, debug=False):
         mesh.vertPosList.append(g.f(3))
         mesh.vertNormList.append(g.f(3))
         indice_offset = g.tell()
-        if debug:
+        if verbose:
             logger.debug({
                 "v3 v_offset": v_offset,
                 "v3 indice_offset": indice_offset,
@@ -131,7 +131,7 @@ def getVertexData(mesh, g, v1, v2, v3, v4, n, debug=False):
         mesh.vertPosList.append(g.f(3))
         mesh.vertNormList.append(g.f(3))
         indice_offset = g.tell()
-        if debug:
+        if verbose:
             logger.debug({
                 "v4 v_offset": v_offset,
                 "v4 indice_offset": indice_offset,
@@ -144,7 +144,7 @@ def getVertexData(mesh, g, v1, v2, v3, v4, n, debug=False):
         mesh.skinWeightList.append([w4, w3, w2, w1])
 
 
-def parse_uv(file_path, node, debug=False):
+def parse_uv(file_path: str, node: Node, verbose=False):
     """Parse UV coordinates value.
 
     Parameters
@@ -152,7 +152,8 @@ def parse_uv(file_path, node, debug=False):
     file_path : str
         Path to SPV file (e.g. 'path/to/PACKAGE.SPV')
     node : Node
-    debug : bool
+    verbose : bool
+        Display mesh's UV values. Default False.
 
     Notes
     -----
@@ -160,18 +161,18 @@ def parse_uv(file_path, node, debug=False):
     - Currently has known issue with parsing UV for BG meshes.
 
     """
-    readFile = open(file_path, 'rb')
-    g = BinaryReader(readFile)
+    binary_file = open(file_path, 'rb')
+    g = BinaryReader(binary_file)
 
-    curOff = g.tell()
-    g.seek(curOff)
+    current_offset = g.tell()
+    g.seek(current_offset)
 
     # TODO: Figure out BG funky UV packing
     # Parse UV in SPV File
-    for meshes in node.data["meshList"]:
+    for meshes in node.data["mesh_list"]:
         for mesh in meshes:
             unpack_error = False
-            if debug:
+            if verbose:
                 logger.debug({
                     "Mesh UV:": mesh.name
                 })
@@ -185,7 +186,7 @@ def parse_uv(file_path, node, debug=False):
                 offset_diff = g.tell() - offset
                 u = 0.0 if math.isnan(f[1]) else f[1]
                 v = 0.0 if math.isnan(f[2]) else f[2]
-                if debug:
+                if verbose:
                     logger.debug({
                         "UV": "%f, %f" % (u, v),
                         "offset": g.tell(),
@@ -195,10 +196,10 @@ def parse_uv(file_path, node, debug=False):
             if unpack_error:
                 logger.warning("UV ERROR DURING UNPACKING. USING (0.0, 0.0) FOR AFFECTED UV")
 
-    readFile.close()
+    g.close()
 
 
-def parse_mesh(file_path, node, debug=False):
+def parse_mesh(file_path: str, node: Node, verbose=False):
     """Parse mesh data from SPM (and SPV) package.
 
     The SPM and SPV files must be located in the same directory.
@@ -208,27 +209,31 @@ def parse_mesh(file_path, node, debug=False):
     file_path : str
         Path to SPM file (e.g. 'path/to/PACKAGE.SPM')
     node : Node
-    debug : bool
+    verbose : bool
+        Display verbose output of mesh parsing. Default False
 
     Notes
     -----
     - Based on Szkaradek123's Python 2 script for Blender 2.49.
 
     """
-    readFile = open(file_path, 'rb')
+    prefix_file_path, ext = os.path.splitext(file_path)
+    if ext.lower() == ".spv":
+        file_path = prefix_file_path + ".SPM"
+    binary_file = open(file_path, "rb")
     node.name = os.path.splitext(os.path.basename(file_path))[0]
-    g = BinaryReader(readFile)
+    g = BinaryReader(binary_file)
     n = 0
 
-    curOff = g.tell()
-    node.offset = curOff
+    current_offset = g.tell()
+    node.offset = current_offset
 
     # Handle SPM file
     logger.debug("=== DEBUG MESH PARSER ===")
-    g.seek(curOff)
+    g.seek(current_offset)
     B = g.i(4)
     meshes = B[3]
-    offset_seek = curOff + B[2]
+    offset_seek = current_offset + B[2]
     logger.debug({
         "B": B,
         "total_meshes": B[3],
@@ -249,7 +254,7 @@ def parse_mesh(file_path, node, debug=False):
         logger.debug({
             "g.i(4)": a,
         })
-    node.data["meshList"] = []
+    node.data["mesh_list"] = []
 
     for i, m in enumerate(range(B[3])):
         logger.debug("")
@@ -272,8 +277,8 @@ def parse_mesh(file_path, node, debug=False):
         logger.debug("offset_1: %s - 1 * 4 + %s = %s" % (tm, D[14], offset_1))
         g.seek(offset_1)
 
-        meshList = []
-        node.data["meshList"].append(meshList)
+        mesh_list = []
+        node.data["mesh_list"].append(mesh_list)
 
         offset_2 = tm - 9 * 4 + D[6]
         logger.debug("offset_2: %s - 9 * 4 + %s = %s" % (tm, D[6], offset_2))
@@ -302,14 +307,14 @@ def parse_mesh(file_path, node, debug=False):
                 })
                 mesh.vertUVCount = E1[0]
                 logger.debug("mesh.vertUVCount: %s" % mesh.vertUVCount)
-                meshList.append(mesh)
+                mesh_list.append(mesh)
                 E.append(E1)
 
             for i in range(unkCount):
                 face_idx = E[i][1]
                 indiceList = g.H(face_idx)
                 logger.debug("indiceList size: %s face_idx: %s" % (len(indiceList), face_idx))
-                mesh = meshList[i]
+                mesh = mesh_list[i]
                 mesh.indiceList = indiceList
 
             logger.debug("mesh.indiceList: %s" % len(mesh.indiceList))
@@ -339,7 +344,7 @@ def parse_mesh(file_path, node, debug=False):
                 # indiceList.append(indices)
             # mesh.indiceList = indiceList[0]
             mesh.indiceList = indiceList
-            meshList.append(mesh)
+            mesh_list.append(mesh)
 
             logger.debug("mesh.indiceList: %s" % len(mesh.indiceList))
 
@@ -349,7 +354,7 @@ def parse_mesh(file_path, node, debug=False):
         logger.debug("C1[%s]: %s" % (m, C1[m]))
         if D[0] in (1792,):
             logger.debug("VERDICT: Unskinned mesh? %s" % name)
-            mesh = meshList[0]
+            mesh = mesh_list[0]
             vertices = C1[m][4]
             if vertices == 0:
                 # NOTE: Don't bother trying other index values besides D[10]
@@ -359,7 +364,7 @@ def parse_mesh(file_path, node, debug=False):
                 # Vertex Position
                 v_offset = g.tell()
                 vertex = g.f(3)
-                if debug:
+                if verbose:
                     logger.debug({
                         "v": vertex,
                         "v_offset": v_offset,
@@ -372,7 +377,7 @@ def parse_mesh(file_path, node, debug=False):
                     vn_offset = v_offset + 888
                 g.seek(vn_offset)
                 vertex_normal = g.f(3)
-                if debug:
+                if verbose:
                     logger.debug({
                         "vn": vertex_normal,
                         "vn_offset": vn_offset,
@@ -382,7 +387,7 @@ def parse_mesh(file_path, node, debug=False):
 
         elif D[0] in (1024, 1026, 1027):
             logger.debug("VERDICT: BG mesh? %s" % name)
-            mesh = meshList[0]
+            mesh = mesh_list[0]
             vertices = C1[m][4]
             if vertices == 0:
                 # NOTE: Don't bother trying other index values besides D[10]
@@ -398,7 +403,7 @@ def parse_mesh(file_path, node, debug=False):
                 # Vertex Position
                 v_offset = g.tell()
                 vertex = g.f(3)
-                if debug:
+                if verbose:
                     logger.debug({
                         "v": vertex,
                         "v_offset": v_offset,
@@ -412,7 +417,7 @@ def parse_mesh(file_path, node, debug=False):
                     vn_offset = v_offset + 888
                 g.seek(vn_offset)
                 vertex_normal = g.f(3)
-                if debug:
+                if verbose:
                     logger.debug({
                         "vn": vertex_normal,
                         "vn_offset": vn_offset,
@@ -426,7 +431,7 @@ def parse_mesh(file_path, node, debug=False):
             start_indiceList = 0
             end_indiceList = 0
 
-            for idx, mesh in enumerate(meshList):
+            for idx, mesh in enumerate(mesh_list):
                 end_vertUVCount += mesh.vertUVCount
                 mesh.vertPosList = total_v[start_vertUVCount:end_vertUVCount]
                 mesh.vertNormList = total_vn[start_vertUVCount:end_vertUVCount]
@@ -440,7 +445,7 @@ def parse_mesh(file_path, node, debug=False):
 
         elif D[0] in (258, 256):
             logger.debug("VERDICT: Skinned mesh? %s" % name)
-            mesh = meshList[0]
+            mesh = mesh_list[0]
 
             g.seek(mesh_offset)
             v1 = C1[m][4]
@@ -453,12 +458,12 @@ def parse_mesh(file_path, node, debug=False):
                 "v3": v3,
                 "v4": v4,
             })
-            getVertexData(mesh, g, v1, v2, v3, v4, n, debug)
+            get_vertex_data(mesh, g, v1, v2, v3, v4, n, verbose)
             mesh_range = unkCount - 1
             logger.debug("mesh_range: %s" % mesh_range)
             for x in range(mesh_range):
                 logger.debug("Loop Subesh %s" % x)
-                mesh = meshList[1 + x]
+                mesh = mesh_list[1 + x]
                 E = g.i(4)
                 v1 = E[0]
                 v2 = E[1]
@@ -470,7 +475,7 @@ def parse_mesh(file_path, node, debug=False):
                     "v3": v3,
                     "v4": v4,
                 })
-                getVertexData(mesh, g, v1, v2, v3, v4, n, debug)
+                get_vertex_data(mesh, g, v1, v2, v3, v4, n, verbose)
 
         else:
             logger.warning({
@@ -483,18 +488,18 @@ def parse_mesh(file_path, node, debug=False):
         g.seek(tm)
 
     F = g.i(C[0])
-    node.data["hashList"] = F
-    readFile.close()
+    node.data["hash_list"] = F
 
     # Handle SPV file
     spv_file = os.path.splitext(file_path)[0] + ".SPV"
     logger.debug({
         "spv_file": spv_file,
     })
-    parse_uv(spv_file, node, debug=debug)
+    parse_uv(spv_file, node, verbose=verbose)
+    g.close()
 
 
-def parse_material(file_path, node):
+def parse_material(file_path: str, node: Node):
     """Parse material from MTR package.
 
     Parameters
@@ -509,17 +514,17 @@ def parse_material(file_path, node):
     Will revisit this in future updates.
 
     """
-    readFile = open(file_path, 'rb')
-    g = BinaryReader(readFile)
+    binary_file = open(file_path, 'rb')
+    g = BinaryReader(binary_file)
 
-    curOff = g.tell()
-    node.offset = curOff
+    current_offset = g.tell()
+    node.offset = current_offset
 
     # Handle MTR file
-    diffuseList = []
-    g.seek(curOff)
+    diffuse_list = []
+    g.seek(current_offset)
     B = g.i(4)
-    g.seek(curOff + B[2])
+    g.seek(current_offset + B[2])
 
     count = g.i(1)[0]
 
@@ -547,7 +552,7 @@ def parse_material(file_path, node):
             "tm": tm,
             "C": C,
         })
-        imageList = []
+        image_list = []
         for i in range(8):
             logger.debug("%s Loop %s %s>" % (('=' * 24), (i + 1), ('=' * 24)))
             logger.debug("Current offset is: %s" % g.tell())
@@ -559,33 +564,33 @@ def parse_material(file_path, node):
                 name = g.find(b"\x00")
                 if name:
                     logger.debug("Name found: %s" % name)
-            imageList.append(name)
+            image_list.append(name)
 
         logger.debug({
-            "total_images": len(imageList),
-            "imageList": imageList,
+            "total_images": len(image_list),
+            "image_list": image_list,
         })
-        diffuseList.append(imageList[1])
+        diffuse_list.append(image_list[1])
         g.seek(tm + 32)
 
-    node.data["diffuseList"] = diffuseList
+    node.data["diffuse_list"] = diffuse_list
     logger.debug({
-        "diffuseList": diffuseList,
+        "diffuse_list": diffuse_list,
     })
-    readFile.close()
+    g.close()
 
 
-def find_substring_offset(context, substring):
+def find_substring_offset(context: bytes, substring: bytes):
     """Find offset value between reoccurring substring in a context.
 
     Currently specific for TXV package.
 
     Parameters
     ----------
-    context : bytes str
-        The data with reoccurring substring
-    substring : bytes str
-        The substring value
+    context : bytes
+        Must be bytes str. The data with reoccurring substring.
+    substring : bytes
+        Must be bytes str. The substring value.
 
     Returns
     -------
@@ -602,7 +607,12 @@ def find_substring_offset(context, substring):
         start += len(substring)
 
 
-def parse_textures(file_path, node, output_path, debug=False):
+def parse_textures(
+        file_path: str,
+        node: Node,
+        output_path: str,
+        verbose=False,
+):
     """Parse textures from TXM (and TXV) package.
 
     The TXM and TXV files must be located in the same directory.
@@ -612,7 +622,7 @@ def parse_textures(file_path, node, output_path, debug=False):
     file_path : str
     node : Node
     output_path : str
-    debug : bool
+    verbose : bool
 
     Notes
     -----
@@ -620,21 +630,21 @@ def parse_textures(file_path, node, output_path, debug=False):
 
     """
     # TODO: Can be handle using HyoutaTools. Maybe omit Noesis as PNG conversion are optional?
-    readFile = open(file_path, 'rb')
-    g = BinaryReader(readFile)
+    binary_file = open(file_path, 'rb')
+    g = BinaryReader(binary_file)
     g.endian = ">"
 
-    curOff = g.tell()
-    node.offset = curOff
+    current_offset = g.tell()
+    node.offset = current_offset
 
     # Handle TXM and TXV file
-    g.seek(curOff)
+    g.seek(current_offset)
     A = g.unpack("4B3i")
     logger.debug({
         "A": A,
         "A[6]": A[6],
     })
-    g.seek(curOff + 16)
+    g.seek(current_offset + 16)
 
     dds_header = b'\x44\x44\x53\x20\x7C'
     txv_file = os.path.splitext(file_path)[0] + ".TXV"
@@ -651,16 +661,16 @@ def parse_textures(file_path, node, output_path, debug=False):
         "dds_size": dds_size,
     })
 
-    node.data["imageList"] = {}
+    node.data["image_list"] = {}
     for i, m in enumerate(range(A[6])):
         logger.debug("%s>" % ('=' * 200))
         B = g.i(7)
         tm = g.tell()
         g.seek(tm - 4 + B[6])
         name = g.find(b"\x00")
-        current_total_offset = curOff + A[4] + B[0]
+        current_total_offset = current_offset + A[4] + B[0]
         logger.debug({
-            "curOff": curOff,
+            "current_offset": current_offset,
             "A[4]": A[4],
             "B[0]": B[0],
             "current_total_offset": current_total_offset,
@@ -668,7 +678,7 @@ def parse_textures(file_path, node, output_path, debug=False):
         g.seek(current_total_offset)
 
         write_name = name + ".DDS"
-        node.data["imageList"][name] = output_path + write_name
+        node.data["image_list"][name] = output_path + write_name
         logger.debug({
             "output_path": output_path,
             "write_name": write_name,
@@ -682,5 +692,4 @@ def parse_textures(file_path, node, output_path, debug=False):
 
         logger.debug("tm: %s" % tm)
         g.seek(tm)
-
-    readFile.close()
+    g.close()
