@@ -1,1 +1,2 @@
+-r base.txt
 isort==5.7.0

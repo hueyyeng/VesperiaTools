@@ -16,12 +16,14 @@ from utils.helpers import (
     get_path,
     set_dat_path,
     set_hyoutatools_path,
+    set_obj_path,
     set_spm_spv_path,
     set_svo_path,
     set_txm_txm_path,
 )
 from utils.log import OutLog
 from utils.textures import extract_textures
+from viewer.obj_viewer import show_viewer
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -40,6 +42,8 @@ class MainWindow(QWidget):
         self.build_ui_extract_svo()
         self.build_ui_spm_spv_path()
         self.build_ui_export_spm_spv()
+        self.build_ui_obj_path()
+        self.build_ui_obj_viewer()
         self.build_ui_log()
         self.build_ui_repo_url()
         self.populate_lineedit_path()
@@ -184,6 +188,33 @@ class MainWindow(QWidget):
         self.export_spm_spv_layout.addWidget(self.export_spm_spv_btn)
         self.main_layout.addLayout(self.export_spm_spv_layout)
 
+    def build_ui_obj_path(self):
+        self.obj_path_layout = QHBoxLayout()
+        self.obj_path_label = QLabel("OBJ Path: ")
+        self.obj_path_layout.addWidget(self.obj_path_label)
+        self.obj_path_lineedit = QLineEdit()
+        self.obj_path_layout.addWidget(self.obj_path_lineedit)
+        self.obj_path_browse_btn = QToolButton()
+        self.obj_path_browse_btn.setText("...")
+        self.obj_path_browse_btn.clicked.connect(
+            partial(
+                self.browse_file,
+                self.obj_path_lineedit,
+                "Path to OBJ files",
+                "OBJ Files (*.obj)",
+            )
+        )
+        self.obj_path_layout.addWidget(self.obj_path_browse_btn)
+        self.main_layout.addLayout(self.obj_path_layout)
+
+    def build_ui_obj_viewer(self):
+        self.obj_viewer_layout = QHBoxLayout()
+        self.obj_viewer_btn = QPushButton(" View Wavefront OBJ ")
+        self.obj_viewer_btn.clicked.connect(self.run_obj_viewer)
+        self.obj_viewer_layout.addStretch(0)
+        self.obj_viewer_layout.addWidget(self.obj_viewer_btn)
+        self.main_layout.addLayout(self.obj_viewer_layout)
+
     def build_ui_log(self):
         self.log_label = QLabel("Output log:")
         self.main_layout.addWidget(self.log_label)
@@ -206,6 +237,7 @@ class MainWindow(QWidget):
             self.dat_path_lineedit.setText(get_path("dat_path"))
             self.svo_path_lineedit.setText(get_path("svo_path"))
             self.spm_spv_path_lineedit.setText(get_path("spm_spv_path"))
+            self.obj_path_lineedit.setText(get_path("obj_path"))
         else:
             create_config_json()
 
@@ -292,12 +324,25 @@ class MainWindow(QWidget):
         output_path, _ = os.path.split(spm_spv_path)
         export_wavefront_obj(spm_spv_path, output_path)
 
+    def run_obj_viewer(self):
+        obj_path = self.obj_path_lineedit.text()
+        if not obj_path:
+            QMessageBox.warning(
+                self,
+                "Warning",
+                "Please specify OBJ path before viewing!",
+            )
+            return
+        self.update_config_json()
+        show_viewer(obj_path)
+
     def update_config_json(self):
         set_hyoutatools_path(self.hyouta_path_lineedit.text())
         set_txm_txm_path(self.txm_txv_path_lineedit.text())
         set_dat_path(self.dat_path_lineedit.text())
         set_svo_path(self.svo_path_lineedit.text())
         set_spm_spv_path(self.spm_spv_path_lineedit.text())
+        set_obj_path(self.obj_path_lineedit.text())
 
     def closeEvent(self, event):
         self.update_config_json()
