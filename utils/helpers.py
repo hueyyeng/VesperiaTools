@@ -13,6 +13,7 @@ def create_config_json():
                 "dat_path": "",
                 "svo_path": "",
                 "spm_spv_path": "",
+                "obj_path": "",
             },
             indent=4,
             sort_keys=True,
@@ -59,3 +60,7 @@ def set_svo_path(path):
 
 def set_spm_spv_path(path):
     set_path("spm_spv_path", path)
+
+
+def set_obj_path(path):
+    set_path("obj_path", path)
