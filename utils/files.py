@@ -54,7 +54,7 @@ def check_fourcc(fourcc, file_path):
         raise InvalidFileException(file_path)
     with open(file_path, "rb") as f:
         file_header = f.read(32)
-    file_fourcc = file_header[:4]
+    file_fourcc = file_header[:4].decode("utf-8")
 
     # Check file's FourCC with expected FourCC in bytes representation
     if file_fourcc != fourcc:
@@ -140,8 +140,9 @@ def unpack_dat(dat_path, deep_extract=False):
     # 2.1 Decompress TLZC package using HyoutaTools
     if fourcc == "TLZC":
         decompress_tlzc(dat_path)
-        pkg_dir = os.path.split(dat_path)[0]
-        pkg_name = os.path.split(dat_path)[1]
+        split_dat_path = os.path.split(dat_path)
+        pkg_dir = split_dat_path[0]
+        pkg_name = split_dat_path[1]
         pkg_decompressed = f"{pkg_name}.dec"
         pkg_decompressed_path = os.path.join(pkg_dir, pkg_decompressed)
         check_fourcc('FPS4', pkg_decompressed_path)
