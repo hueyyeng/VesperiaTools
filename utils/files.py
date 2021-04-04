@@ -1,4 +1,4 @@
-"""Vesperia Tools Files Exceptions"""
+"""Vesperia Tools Files."""
 import logging
 import os
 import struct
@@ -17,7 +17,7 @@ log_handler.setLevel(logging.DEBUG)
 logger.addHandler(log_handler)
 
 
-def get_fourcc(file_path):
+def get_fourcc(file_path: str):
     """Get FourCC code of a file
 
     Parameters
@@ -39,7 +39,7 @@ def get_fourcc(file_path):
     return file_fourcc.decode("utf-8")
 
 
-def check_fourcc(fourcc, file_path):
+def check_fourcc(fourcc: str, file_path: str):
     """Check FourCC code of a file
 
     Parameters
@@ -66,7 +66,7 @@ def check_fourcc(fourcc, file_path):
         raise InvalidFourCCException(fourcc, file_fourcc)
 
 
-def extract_svo(svo_path, output_path=''):
+def extract_svo(svo_path: str, output_path=''):
     """Extract SVO package
 
     Parameters
@@ -95,7 +95,7 @@ def extract_svo(svo_path, output_path=''):
     logger.info(f"Extract SVO completed.")
 
 
-def decompress_tlzc(dat_path):
+def decompress_tlzc(dat_path: str):
     """Decompress TLZC package
 
     Parameters
@@ -127,7 +127,8 @@ def unpack_dat(dat_path, deep_extract=False):
     dat_path : str
         Path to DAT file (e.g. 'path/to/PACKAGE.DAT')
     deep_extract : bool
-        True to extract deeper for digit only package (e.g. "0000")
+        True to extract deeper for digit only package (e.g. "0000").
+        Default False.
 
     """
     # 1. Check if path is valid

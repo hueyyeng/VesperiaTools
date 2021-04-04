@@ -236,7 +236,7 @@ def parse_mesh(file_path: str, node: Node, verbose=False):
     offset_seek = current_offset + B[2]
     logger.debug({
         "B": B,
-        "total_meshes": B[3],
+        "meshes": B[3],
         "offset_seek": offset_seek,
     })
     g.seek(offset_seek)
@@ -256,9 +256,8 @@ def parse_mesh(file_path: str, node: Node, verbose=False):
         })
     node.data["mesh_list"] = []
 
-    for i, m in enumerate(range(B[3])):
-        logger.debug("")
-        logger.debug("%s Looping Mesh %s %s>" % (('=' * 64), (i + 1), ('=' * 64)))
+    for _mesh_idx, m in enumerate(range(meshes)):
+        logger.debug("%s Looping Mesh %s %s>" % (('=' * 64), (_mesh_idx), ('=' * 64)))
         D = g.i(15)
         logger.debug({
             "D": D,
@@ -290,13 +289,15 @@ def parse_mesh(file_path: str, node: Node, verbose=False):
             "unknown": unknown,
             "unkCount": unkCount,
         })
+        logger.debug({
+            "indice_start_offset": g.tell(),
+            "D[11]": D[11],
+        })
         E = []
 
-        # TODO: Maybe combine more than 1 unkCount mesh into giganto mesh?
-        # if unkCount == 1:
         if unkCount >= 1:
             # Original approach. Works great for CH mesh.
-            logger.debug("FOUND %s SUBMESHES" % unkCount)
+            logger.debug("FOUND %s SUBMESHES - Original Approach" % unkCount)
             for i in range(unkCount):
                 mesh = Mesh()
                 mesh.name = name
@@ -320,33 +321,26 @@ def parse_mesh(file_path: str, node: Node, verbose=False):
             logger.debug("mesh.indiceList: %s" % len(mesh.indiceList))
 
         else:
-            # Combined approach. Faces still incorrectly parsed.
-            logger.debug("FOUND %s SUBMESHES" % unkCount)
-            mesh = Mesh()
-            mesh.name = name
-            mesh.diffuseID = D[4] - 1
+            # Blender combined approach. Faces still incorrectly parsed.
+            logger.debug("FOUND %s SUBMESHES - Blender Combined Approach" % unkCount)
             for i in range(unkCount):
+                mesh = Mesh()
+                mesh.name = name
+                mesh.diffuseID = D[4] - 1
+                mesh_list.append(mesh)
                 E1 = g.H(2)
                 logger.debug({
                     "E1": E1,
                 })
                 mesh.vertUVCount += E1[0]
                 E.append(E1)
-            logger.debug("mesh.vertUVCount: %s" % mesh.vertUVCount)
-
-            indiceList = ()
+                logger.debug("mesh.vertUVCount: %s" % mesh.vertUVCount)
             for i in range(unkCount):
-                face_idx = E[i][1]
-                indices = g.H(face_idx)
-                # logger.debug(indices)
-                logger.debug("indices size: %s face_idx: %s" % (len(indices), face_idx))
-                indiceList += indices
-                # indiceList.append(indices)
-            # mesh.indiceList = indiceList[0]
-            mesh.indiceList = indiceList
-            mesh_list.append(mesh)
+                indiceList = g.H(E[i][1])
+                mesh = mesh_list[i]
+                mesh.indiceList = indiceList
 
-            logger.debug("mesh.indiceList: %s" % len(mesh.indiceList))
+            logger.debug("mesh.indiceList size: %s" % len(mesh.indiceList))
 
         mesh_offset = tm - 8 * 4 + D[7]
         logger.debug("mesh_offset: %s - 8 * 4 + %s = %s" % (tm, D[7], mesh_offset))
@@ -355,35 +349,8 @@ def parse_mesh(file_path: str, node: Node, verbose=False):
         if D[0] in (1792,):
             logger.debug("VERDICT: Unskinned mesh? %s" % name)
             mesh = mesh_list[0]
-            vertices = C1[m][4]
-            if vertices == 0:
-                # NOTE: Don't bother trying other index values besides D[10]
-                logger.debug("No vertices found! Probably BG or static mesh. Using D[10]: %s" % D[10])
-                vertices = D[10]
-            for i in range(vertices):
-                # Vertex Position
-                v_offset = g.tell()
-                vertex = g.f(3)
-                if verbose:
-                    logger.debug({
-                        "v": vertex,
-                        "v_offset": v_offset,
-                    })
-                mesh.vertPosList.append(vertex)
-
-                # Vertex Normal
-                vn_offset = v_offset
-                if not D[0] in (1024, 1026):
-                    vn_offset = v_offset + 888
-                g.seek(vn_offset)
-                vertex_normal = g.f(3)
-                if verbose:
-                    logger.debug({
-                        "vn": vertex_normal,
-                        "vn_offset": vn_offset,
-                    })
-                mesh.vertNormList.append(vertex_normal)
-                g.seek(v_offset + 12)
+            for i in range(C1[m][4]):
+                mesh.vertPosList.append(g.f(3))
 
         elif D[0] in (1024, 1026, 1027):
             logger.debug("VERDICT: BG mesh? %s" % name)
@@ -462,7 +429,7 @@ def parse_mesh(file_path: str, node: Node, verbose=False):
             mesh_range = unkCount - 1
             logger.debug("mesh_range: %s" % mesh_range)
             for x in range(mesh_range):
-                logger.debug("Loop Subesh %s" % x)
+                logger.debug("Loop Submesh %s" % x)
                 mesh = mesh_list[1 + x]
                 E = g.i(4)
                 v1 = E[0]

@@ -53,9 +53,22 @@ class Mesh:
         self.RAW = 0
 
     def create_face(self, matID=0):
+        """Create Face
+
+        Parameters
+        ----------
+        matID : int
+
+        Notes
+        -----
+        - Based on delguoqing's Python 2 script for Vesperia 360.
+
+        """
         group_idx = 1
         clockwise = False
-        for i in range(len(self.indiceList) - 2):
+        indices = len(self.indiceList) - 2
+        for i in range(indices):
+            # 0xFFFF == 65535
             a, b, c = self.indiceList[i: i + 3]
             is_new_group = (i == 0 or a == 0xFFFF)
             write_face = 0xFFFF not in (a, b, c)
@@ -72,7 +85,6 @@ class Mesh:
                     })
                     self.matIDList.append(matID)
                 else:
-                    # triangle = [a, c, b]  # Blender script
                     triangle = [c, b, a]  # delguoqing
                     self.triangleList.append({
                         "group": group_idx,

@@ -127,12 +127,17 @@ class MainWindow(QWidget):
         self.main_layout.addLayout(self.dat_path_layout)
 
     def build_ui_unpack_dat(self):
-        self.unpack_data_layout = QHBoxLayout()
+        self.unpack_dat_layout = QHBoxLayout()
+        self.unpack_dat_deep_checkbox = QCheckBox("Deep Extract")
+        self.unpack_dat_deep_checkbox.setToolTip(
+            'Handle assets like CH which unpacked as "0000", "0001" and so on'
+        )
         self.unpack_dat_btn = QPushButton("Unpack DAT")
         self.unpack_dat_btn.clicked.connect(self.run_unpack_dat)
-        self.unpack_data_layout.addStretch(0)
-        self.unpack_data_layout.addWidget(self.unpack_dat_btn)
-        self.main_layout.addLayout(self.unpack_data_layout)
+        self.unpack_dat_layout.addStretch(0)
+        self.unpack_dat_layout.addWidget(self.unpack_dat_deep_checkbox)
+        self.unpack_dat_layout.addWidget(self.unpack_dat_btn)
+        self.main_layout.addLayout(self.unpack_dat_layout)
 
     def build_ui_svo_path(self):
         self.svo_path_layout = QHBoxLayout()
@@ -298,7 +303,10 @@ class MainWindow(QWidget):
             )
             return
         self.update_config_json()
-        unpack_dat(self.dat_path_lineedit.text())
+        unpack_dat(
+            self.dat_path_lineedit.text(),
+            deep_extract=self.unpack_dat_deep_checkbox.isChecked(),
+        )
 
     def run_extract_svo(self):
         if not self.hyouta_path_lineedit.text() or not self.svo_path_lineedit.text():
