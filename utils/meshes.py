@@ -71,13 +71,16 @@ def write_mesh_to_obj(node: Node, output_path: str):
     output_path : str
         The chosen output directory path.
 
+    Returns
+    -------
+    str
+        The output path.
+
     Notes
     -----
     - Based on delguoqing's Python 2 script for Vesperia 360.
 
     """
-    # TODO: Write out function to combine all OBJs and add face number
-    #  with consecutive mesh total vertices
     if node.name != 'NONAME':
         package_dir_path = os.path.join(output_path, node.name)
         os.makedirs(package_dir_path, exist_ok=True)
@@ -86,10 +89,14 @@ def write_mesh_to_obj(node: Node, output_path: str):
     mesh_lists = node.data["mesh_list"]
     for mesh_list_idx, mesh_list in enumerate(mesh_lists):
         logger.debug("%s>" % ('=' * 200))
-        logger.debug("Loop %s" % (mesh_list_idx+1))
+        logger.debug("Outer Loop %s" % mesh_list_idx)
 
-        mesh_names = []
+        mesh_list_size = len(mesh_list)
+        logger.debug("Mesh List Size: %s" % mesh_list_size)
+
+        processed_mesh_names = []
         for mesh_idx, mesh in enumerate(mesh_list):
+            logger.debug("Inner Loop %s" % mesh_idx)
             vertices_pos = mesh.vertPosList
             vertices_normal = mesh.vertNormList
             vertices_uvs = mesh.vertUVList
@@ -102,43 +109,51 @@ def write_mesh_to_obj(node: Node, output_path: str):
             })
 
             mesh_name = mesh.name
-            mesh_names.append(mesh.name)
-            mode = 'w'
+            processed_mesh_names.append(mesh.name)
+            write_mode = 'w'
+
+            if mesh_list_size == 1 and mesh_name in processed_mesh_names:
+                logger.debug("Current mesh has same name as prior found mesh! Using %s" % mesh_name)
+                write_mode = "a"
 
             if mesh_idx > 0:
-                logger.debug("%s ==> %s" % (mesh_names[mesh_idx-1], mesh_name))
-            if mesh_idx > 0 and mesh_name == mesh_names[mesh_idx-1]:
+                logger.debug("%s ==> %s" % (processed_mesh_names[mesh_idx-1], mesh_name))
+            if mesh_idx > 0 and mesh_name == processed_mesh_names[mesh_idx-1]:
                 mesh_name = f"{mesh_name}_{mesh_idx}"
                 logger.debug("Current mesh has same name as prior mesh! Using %s" % mesh_name)
-                # mode = 'a'
+                # write_mode = 'a'
 
             valid_mesh_name = str(mesh_name).strip().replace(' ', '_')
             valid_mesh_name = re.sub(r'(?u)[^-\w.]', '', valid_mesh_name)
             write_output_path = os.path.join(output_path, valid_mesh_name) + ".obj"
             logger.debug({
                 "write_output_path": write_output_path,
-                "mode": mode,
+                "write_mode": write_mode,
             })
 
             # Write mesh attributes into OBJ file
-            with open(write_output_path, mode) as f:
+            with open(write_output_path, write_mode) as f:
                 f.write(f"# submesh {mesh_idx+1}: {valid_mesh_name}" + "\n")
-                f.write(f"g {valid_mesh_name}" + "\n")
+                f.write(f"o {valid_mesh_name}" + "\n")
                 f.write("s 1" + "\n")
+
                 for vertex in vertices_pos:
                     x = round_float_value(vertex[0], 6)
                     y = round_float_value(vertex[1], 6)
                     z = round_float_value(vertex[2], 6)
                     f.write(f"v {x} {y} {z}" + "\n")
+
                 for vertex in vertices_normal:
                     x = round_float_value(vertex[0], 6)
                     y = round_float_value(vertex[1], 6)
                     z = round_float_value(vertex[2], 6)
                     f.write(f"vn {x} {y} {z}" + "\n")
+
                 for uv in vertices_uvs:
                     u = round_float_value(uv[0], 6)
                     vertices_pos = round_float_value(uv[1], 6)
                     f.write(f"vt {u} {vertices_pos}" + "\n")
+
                 for face_idx, face in enumerate(faces):
                     if face_idx == 0:
                         f.write(f"# group {face['group']}" + "\n")
@@ -149,5 +164,7 @@ def write_mesh_to_obj(node: Node, output_path: str):
                     c = face['triangle'][2] + 1
                     f.write(f"f {a}/{a}/{a} {b}/{b}/{b} {c}/{c}/{c}" + "\n")
 
-            logger.debug("Export %s successful" % write_output_path)
-            logger.debug("")
+            logger.debug("Export %s submesh successful" % write_output_path)
+
+        logger.debug("Done exporting %s" % node.name)
+        return output_path

@@ -1,4 +1,4 @@
-"""VesperiaTools Exceptions."""
+"""Vesperia Tools Exceptions."""
 
 
 class InvalidFileException(Exception):
