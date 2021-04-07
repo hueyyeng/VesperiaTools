@@ -62,7 +62,7 @@ def round_float_value(value: float, decimal: int):
     return rounded_value.format(value)
 
 
-def write_mesh_to_obj(node: Node, output_path: str):
+def write_to_obj(node: Node, output_path: str):
     """Write out decoded mesh as Wavefront OBJ file.
 
     Parameters

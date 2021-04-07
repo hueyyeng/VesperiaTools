@@ -9,7 +9,10 @@ from PySide2.QtWidgets import *
 
 from constants.path import CONFIG_JSON
 from constants.ui import GITHUB_REPO_URL
-from utils.exporter import export_wavefront_obj
+from utils.exporter import (
+    export_wavefront_mtl,
+    export_wavefront_obj,
+)
 from utils.files import extract_svo, unpack_dat
 from utils.helpers import (
     create_config_json,
@@ -18,6 +21,7 @@ from utils.helpers import (
     set_hyoutatools_path,
     set_obj_path,
     set_spm_spv_path,
+    set_mtr_path,
     set_svo_path,
     set_txm_txm_path,
 )
@@ -42,6 +46,8 @@ class MainWindow(QWidget):
         self.build_ui_extract_svo()
         self.build_ui_spm_spv_path()
         self.build_ui_export_spm_spv()
+        self.build_ui_mtr_path()
+        self.build_ui_export_mtr()
         self.build_ui_obj_path()
         self.build_ui_obj_viewer()
         self.build_ui_log()
@@ -193,6 +199,33 @@ class MainWindow(QWidget):
         self.export_spm_spv_layout.addWidget(self.export_spm_spv_btn)
         self.main_layout.addLayout(self.export_spm_spv_layout)
 
+    def build_ui_mtr_path(self):
+        self.mtr_path_layout = QHBoxLayout()
+        self.mtr_path_label = QLabel("MTR Path: ")
+        self.mtr_path_layout.addWidget(self.mtr_path_label)
+        self.mtr_path_lineedit = QLineEdit()
+        self.mtr_path_layout.addWidget(self.mtr_path_lineedit)
+        self.mtr_path_browse_btn = QToolButton()
+        self.mtr_path_browse_btn.setText("...")
+        self.mtr_path_browse_btn.clicked.connect(
+            partial(
+                self.browse_file,
+                self.mtr_path_lineedit,
+                "Path to MTR files",
+                "MTR Files (*.mtr)",
+            )
+        )
+        self.mtr_path_layout.addWidget(self.mtr_path_browse_btn)
+        self.main_layout.addLayout(self.mtr_path_layout)
+
+    def build_ui_export_mtr(self):
+        self.export_mtr_layout = QHBoxLayout()
+        self.export_mtr_btn = QPushButton(" Export MTR as Wavefront MTL ")
+        self.export_mtr_btn.clicked.connect(self.run_export_mtr)
+        self.export_mtr_layout.addStretch(0)
+        self.export_mtr_layout.addWidget(self.export_mtr_btn)
+        self.main_layout.addLayout(self.export_mtr_layout)
+
     def build_ui_obj_path(self):
         self.obj_path_layout = QHBoxLayout()
         self.obj_path_label = QLabel("OBJ Path: ")
@@ -242,6 +275,7 @@ class MainWindow(QWidget):
             self.dat_path_lineedit.setText(get_path("dat_path"))
             self.svo_path_lineedit.setText(get_path("svo_path"))
             self.spm_spv_path_lineedit.setText(get_path("spm_spv_path"))
+            self.mtr_path_lineedit.setText(get_path("mtr_path"))
             self.obj_path_lineedit.setText(get_path("obj_path"))
         else:
             create_config_json()
@@ -332,6 +366,19 @@ class MainWindow(QWidget):
         output_path, _ = os.path.split(spm_spv_path)
         export_wavefront_obj(spm_spv_path, output_path)
 
+    def run_export_mtr(self):
+        mtr_path = self.mtr_path_lineedit.text()
+        if not mtr_path:
+            QMessageBox.warning(
+                self,
+                "Warning",
+                "Please specify MTR path before exporting!",
+            )
+            return
+        self.update_config_json()
+        output_path, _ = os.path.split(mtr_path)
+        export_wavefront_mtl(mtr_path, output_path)
+
     def run_obj_viewer(self):
         obj_path = self.obj_path_lineedit.text()
         if not obj_path:
@@ -350,6 +397,7 @@ class MainWindow(QWidget):
         set_dat_path(self.dat_path_lineedit.text())
         set_svo_path(self.svo_path_lineedit.text())
         set_spm_spv_path(self.spm_spv_path_lineedit.text())
+        set_mtr_path(self.mtr_path_lineedit.text())
         set_obj_path(self.obj_path_lineedit.text())
 
     def closeEvent(self, event):

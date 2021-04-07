@@ -62,5 +62,9 @@ def set_spm_spv_path(path):
     set_path("spm_spv_path", path)
 
 
+def set_mtr_path(path):
+    set_path("mtr_path", path)
+
+
 def set_obj_path(path):
     set_path("obj_path", path)

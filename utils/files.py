@@ -66,6 +66,31 @@ def check_fourcc(fourcc: str, file_path: str):
         raise InvalidFourCCException(fourcc, file_fourcc)
 
 
+def rename_unknown_files_ext(dir_path: str):
+    """Rename Unknown Files Extension
+
+    Parameters
+    ----------
+    dir_path : str
+
+    """
+    file_names = os.listdir(dir_path)
+    for file_name in file_names:
+        file_path = os.path.join(
+            dir_path,
+            file_name,
+        )
+
+        with open(file_path, "rb") as f:
+            file_header = f.read(4).hex()
+
+        file_header = file_header.upper()
+        if file_header in tales.TYPE_2_EXT_PC.keys():
+            file_path_basename = os.path.splitext(file_path)[0]
+            file_path_rename = f"{file_path_basename}{tales.TYPE_2_EXT_PC[file_header]}"
+            os.rename(file_path, file_path_rename)
+
+
 def extract_svo(svo_path: str, output_path=''):
     """Extract SVO package
 

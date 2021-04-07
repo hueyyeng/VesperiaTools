@@ -11,9 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 class Node:
-    """Node for decoded meshes.
+    """Node for object parsing and general data structures.
 
     Contains attributes needed for exporting to external format (e.g. Wavefront OBJ)
+
+    This also hold pointers of the data element that we want to store when
+    parsing an object such as found meshes and materials.
 
     Notes
     -----
@@ -45,7 +48,7 @@ def debug_mesh(node: Node, verbose=False):
     })
     mesh_lists = node.data["mesh_list"]
     for idx, mesh_list in enumerate(mesh_lists):
-        logger.debug("Total meshes for Loop %s : %s" % (idx + 1, len(mesh_list)))
+        logger.debug("Total meshes for Loop %s : %s" % (idx, len(mesh_list)))
         for mesh in mesh_list:
             logger.debug({
                 "MeshName": mesh.name,
@@ -60,7 +63,6 @@ def debug_mesh(node: Node, verbose=False):
             if verbose:
                 for face_idx, indice in enumerate(mesh.indiceList):
                     logger.debug("indice %03d : %s" % (face_idx, indice))
-        logger.debug("")
 
 
 def get_vertex_data(mesh, g, v1, v2, v3, v4, n, verbose=False):
@@ -466,7 +468,7 @@ def parse_mesh(file_path: str, node: Node, verbose=False):
     g.close()
 
 
-def parse_material(file_path: str, node: Node):
+def parse_material(file_path: str, node: Node, verbose=False):
     """Parse material from MTR package.
 
     Parameters
@@ -474,6 +476,7 @@ def parse_material(file_path: str, node: Node):
     file_path : str
         Path to DAT file (e.g. 'path/to/PACKAGE.MTR')
     node : Node
+    verbose : bool
 
     Notes
     -----
@@ -482,13 +485,13 @@ def parse_material(file_path: str, node: Node):
 
     """
     binary_file = open(file_path, 'rb')
+    node.name = os.path.splitext(os.path.basename(file_path))[0]
     g = BinaryReader(binary_file)
-
     current_offset = g.tell()
     node.offset = current_offset
 
     # Handle MTR file
-    diffuse_list = []
+    material_list = []
     g.seek(current_offset)
     B = g.i(4)
     g.seek(current_offset + B[2])
@@ -510,7 +513,7 @@ def parse_material(file_path: str, node: Node):
         "lll": lll,
     })
 
-    # Loop through materials?
+    # Loop through materials
     for m in range(B[3]):
         logger.debug("%s>" % ('=' * 200))
         tm = g.tell()
@@ -519,7 +522,9 @@ def parse_material(file_path: str, node: Node):
             "tm": tm,
             "C": C,
         })
-        image_list = []
+        found_material_names = []
+        found_material_texture_names = []
+        material_name = "UNKNOWN_MAT"
         for i in range(8):
             logger.debug("%s Loop %s %s>" % (('=' * 24), (i + 1), ('=' * 24)))
             logger.debug("Current offset is: %s" % g.tell())
@@ -529,20 +534,26 @@ def parse_material(file_path: str, node: Node):
                 logger.debug("%s>" % ('=' * 32))
                 g.seek(tm + 4 * i + c)
                 name = g.find(b"\x00")
-                if name:
+                if name and 'MAT' in name:
                     logger.debug("Name found: %s" % name)
-            image_list.append(name)
+                    material_name = name
+                elif name:
+                    found_material_texture_names.append(name)
+
+        found_material_names.append({
+            "mtl": material_name,
+            "tex": found_material_texture_names,
+        })
 
         logger.debug({
-            "total_images": len(image_list),
-            "image_list": image_list,
+            "found_material_names": found_material_names,
         })
-        diffuse_list.append(image_list[1])
+        material_list.append(found_material_names)
         g.seek(tm + 32)
 
-    node.data["diffuse_list"] = diffuse_list
+    node.data["material_list"] = material_list
     logger.debug({
-        "diffuse_list": diffuse_list,
+        "material_list": material_list,
     })
     g.close()
 
