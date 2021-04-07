@@ -6,13 +6,67 @@ from parsers.parser import (
     Node,
     debug_mesh,
     parse_mesh,
+    parse_material,
+    parse_textures,
 )
+from utils.materials import write_to_mtl
 from utils.meshes import (
     face_creation,
-    write_mesh_to_obj,
+    write_to_obj,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def join_mtl_files(mtl_files_path: str, mtl_name: str = None):
+    """Join MTL files
+
+    As Vesperia store meshes in SPM as split submeshes, this will join
+    the separated exported OBJ material files into one MTL file.
+
+    Parameters
+    ----------
+    mtl_files_path : str
+        The path containing the OBJ material files for joining
+    mtl_name : str or None
+        The joined MTL name. If None, will default to 'all.mtl'
+
+    Notes
+    -----
+    - Based on delguoqing's Python 2 script for Vesperia 360
+
+    """
+    file_names = os.listdir(mtl_files_path)
+    mtls = set()
+    for file_name in file_names:
+        mtl_file_path = os.path.join(mtl_files_path, file_name)
+        if file_name.endswith("all.mtl"):
+            continue
+
+        with open(mtl_file_path, "r") as mtl_file:
+            mtls.add(mtl_file.read())
+
+    if not mtl_name:
+        mtl_name = "all.mtl"
+
+    joined_mtl_path = os.path.join(
+        mtl_files_path,
+        mtl_name,
+    )
+    with open(joined_mtl_path, "w") as joined_mtl_file:
+        for mtl in mtls:
+            joined_mtl_file.write(mtl)
+
+
+def export_wavefront_mtl(
+    input_path: str,
+    output_path: str,
+    node: Node = None,
+    verbose=False,
+):
+    node = Node() if node is None else node
+    parse_material(input_path, node, verbose=False)
+    write_to_mtl(node, output_path)
 
 
 def join_obj_files(obj_files_path: str, obj_name: str = None):
@@ -110,7 +164,7 @@ def export_wavefront_obj(
     face_creation(node, verbose=False)
     if verbose:
         debug_mesh(node)
-    exported_obj_path = write_mesh_to_obj(node, output_path=output_path)
+    exported_obj_path = write_to_obj(node, output_path=output_path)
     logger.debug({
         "msg": "Successfully export Wavefront OBJs",
         "file_path": input_path,
