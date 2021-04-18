@@ -2,9 +2,11 @@
 import logging
 import os
 import subprocess
+from pathlib import Path
 
 from utils.files import unpack_dat
 from utils.helpers import get_path
+from parsers.parser import Node
 
 logger = logging.getLogger(__name__)
 
@@ -57,3 +59,20 @@ def extract_textures(package_path: str):
         )
     else:
         logger.info(f"Extract DDS textures completed. Found {found_txm_txv} TXM/TXV pairing files.")
+
+
+def write_to_dds(node: Node, output_path: str):
+    output_path = Path(output_path)
+    output_path.mkdir(exist_ok=True)
+
+    if node.name != 'NONAME':
+        output_path = output_path / node.name
+
+    for image in node.data["image_list"]:
+        texture_name = image["texture_name"]
+        texture_path = output_path / texture_name
+        dds_content = image["dds_content"]
+        with open(texture_path, 'wb') as dds_file:
+            dds_file.write(dds_content)
+
+    logger.info("Writing DDS textures completed.")

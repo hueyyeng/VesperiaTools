@@ -3,8 +3,10 @@ import os
 import math  # Handle NaN value
 import struct
 import logging
+from pathlib import Path
 
-from .models import Mesh
+from constants.tales import DDS_HEADER
+from parsers.models import Mesh
 from utils.binaries import BinaryReader
 
 logger = logging.getLogger(__name__)
@@ -588,7 +590,6 @@ def find_substring_offset(context: bytes, substring: bytes):
 def parse_textures(
         file_path: str,
         node: Node,
-        output_path: str,
         verbose=False,
 ):
     """Parse textures from TXM (and TXV) package.
@@ -599,7 +600,6 @@ def parse_textures(
     ----------
     file_path : str
     node : Node
-    output_path : str
     verbose : bool
 
     Notes
@@ -607,8 +607,12 @@ def parse_textures(
     - Based on Szkaradek123's Python 2 script for Blender 2.49.
 
     """
-    # TODO: Can be handle using HyoutaTools. Maybe omit Noesis as PNG conversion are optional?
+    file_path = Path(file_path)
+    if file_path.is_file() and file_path.suffix.lower() == ".txv":
+        file_path = os.path.splitext(file_path)[0] + ".TXM"
+
     binary_file = open(file_path, 'rb')
+    node.name = os.path.splitext(os.path.basename(file_path))[0]
     g = BinaryReader(binary_file)
     g.endian = ">"
 
@@ -624,7 +628,6 @@ def parse_textures(
     })
     g.seek(current_offset + 16)
 
-    dds_header = b'\x44\x44\x53\x20\x7C'
     txv_file = os.path.splitext(file_path)[0] + ".TXV"
     logger.debug("txv_file: %s" % txv_file)
     try:
@@ -632,14 +635,14 @@ def parse_textures(
             txv_content = f.read()
     except FileNotFoundError:
         raise Exception(f"{txv_file} not found! Make sure it is in the same directory")
-    dds_offset = list(find_substring_offset(txv_content, dds_header))
+    dds_offset = list(find_substring_offset(txv_content, DDS_HEADER))
     dds_size = dds_offset[1]-dds_offset[0]
     logger.debug({
         "dds_offset": dds_offset,
         "dds_size": dds_size,
     })
 
-    node.data["image_list"] = {}
+    image_list = []
     for i, m in enumerate(range(A[6])):
         logger.debug("%s>" % ('=' * 200))
         B = g.i(7)
@@ -655,19 +658,19 @@ def parse_textures(
         })
         g.seek(current_total_offset)
 
-        write_name = name + ".DDS"
-        node.data["image_list"][name] = output_path + write_name
+        texture_name = name + ".DDS"
         logger.debug({
-            "output_path": output_path,
-            "write_name": write_name,
+            "texture_name": texture_name,
         })
 
-        with open(output_path + write_name, 'wb') as f:
-            dds_file = BinaryReader(f)
-            # DDS file must start with DDS header
-            dds_content = txv_content[dds_offset[i]:dds_offset[i] + dds_size - 4]
-            dds_file.write(dds_content)
+        image_data = {
+            "texture_name": texture_name,
+            "dds_content": txv_content[dds_offset[i]:dds_offset[i] + dds_size - 4],
+        }
 
+        image_list.append(image_data)
         logger.debug("tm: %s" % tm)
         g.seek(tm)
+
+    node.data["image_list"] = image_list
     g.close()

@@ -10,6 +10,7 @@ from PySide2.QtWidgets import *
 from constants.path import CONFIG_JSON
 from constants.ui import GITHUB_REPO_URL
 from utils.exporter import (
+    export_dds_textures,
     export_wavefront_mtl,
     export_wavefront_obj,
 )
@@ -97,9 +98,10 @@ class MainWindow(QWidget):
         self.txm_txv_browser_btn.setText("...")
         self.txm_txv_browser_btn.clicked.connect(
             partial(
-                self.browse_folder,
+                self.browse_file,
                 self.txm_txv_path_lineedit,
                 "Path to TXM/TXV files",
+                "TXM/TXV Files (*.txm *.txv)",
             )
         )
         self.txm_txv_layout.addWidget(self.txm_txv_browser_btn)
@@ -318,15 +320,17 @@ class MainWindow(QWidget):
             lineedit.setText(os.path.normpath(folder_path))
 
     def run_extract_textures(self):
-        if not self.hyouta_path_lineedit.text() or not self.txm_txv_path_lineedit.text():
+        txm_txv_path = self.txm_txv_path_lineedit.text()
+        if not txm_txv_path:
             QMessageBox.warning(
                 self,
                 "Warning",
-                "Ensure both HyoutaToolsCLI.exe and TXV/TXV paths are selected before extracting!",
+                "Ensure TXV/TXV path are selected before extracting!",
             )
             return
         self.update_config_json()
-        extract_textures(self.txm_txv_path_lineedit.text())
+        output_path, _ = os.path.split(txm_txv_path)
+        export_dds_textures(txm_txv_path, output_path)
 
     def run_unpack_dat(self):
         if not self.hyouta_path_lineedit.text() or not self.dat_path_lineedit.text():
