@@ -14,6 +14,7 @@ from utils.meshes import (
     face_creation,
     write_to_obj,
 )
+from utils.textures import write_to_dds
 
 logger = logging.getLogger(__name__)
 
@@ -59,10 +60,10 @@ def join_mtl_files(mtl_files_path: str, mtl_name: str = None):
 
 
 def export_wavefront_mtl(
-    input_path: str,
-    output_path: str,
-    node: Node = None,
-    verbose=False,
+        input_path: str,
+        output_path: str,
+        node: Node = None,
+        verbose=False,
 ):
     node = Node() if node is None else node
     parse_material(input_path, node, verbose=False)
@@ -175,3 +176,14 @@ def export_wavefront_obj(
         "msg": "Successfully joined OBJs as all.obj",
         "exported_obj_path": exported_obj_path,
     })
+
+
+def export_dds_textures(
+        input_path: str,
+        output_path: str,
+        node: Node = None,
+        verbose=False,
+):
+    node = Node() if node is None else node
+    parse_textures(input_path, node, verbose=False)
+    write_to_dds(node, output_path)

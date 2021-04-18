@@ -20,6 +20,7 @@ UNPACKED_LEFTOVER_FILES = (
 # Note 1: PC identifier differs with 360 version.
 # Note 2: The PS4/XBO Definitive Edition should share the same identifier?
 # Note 3: Haven't check for PS3 and Switch DE.
+# TODO: Find a better way to identify TXV files
 TYPE_2_EXT_PC = {
     "00040000": ".ANM",
     "00000500": ".BLD",
@@ -33,6 +34,8 @@ TYPE_2_EXT_PC = {
     "54525348": ".TER",
     "00020000": ".TXM",
     "00155094": ".TXV",
+    "00014094": ".TXV",
+    "00055094": ".TXV",
 }
 
 
@@ -110,3 +113,6 @@ VERTEX_FORMAT_UV_CHANNEL_COUNT_MASK = bit(0) + bit(1)  # Vertex Stream format fl
 PLATFORM_X360 = 0x4
 PLATFORM_PC = 0x10
 TYPE_CODE = 0x00010000
+
+# Textures
+DDS_HEADER = b'\x44\x44\x53\x20\x7C'

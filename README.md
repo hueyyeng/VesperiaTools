@@ -11,7 +11,7 @@ _*Requires HyoutaTools._
 _**Refer to Known Issues_
 
 ## Requirements
-- Python 3.6+
+- Python 3.8+
 - Windows 7 SP1 or newer (for HyoutaTools)
 
 ## Running VesperiaTools

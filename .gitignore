@@ -5,6 +5,7 @@ _tmp/
 logs/
 *.log
 config.json
+.python-version
 
 # Virtual Envs
 env/
