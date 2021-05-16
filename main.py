@@ -9,17 +9,19 @@ from PySide2.QtWidgets import *
 
 from constants.path import CONFIG_JSON
 from constants.ui import GITHUB_REPO_URL
+from parsers.parser import (
+    parse_dat,
+    parse_svo,
+)
 from utils.exporter import (
     export_dds_textures,
     export_wavefront_mtl,
     export_wavefront_obj,
 )
-from utils.files import extract_svo, unpack_dat
 from utils.helpers import (
     create_config_json,
     get_path,
     set_dat_path,
-    set_hyoutatools_path,
     set_obj_path,
     set_spm_spv_path,
     set_mtr_path,
@@ -27,7 +29,6 @@ from utils.helpers import (
     set_txm_txm_path,
 )
 from utils.log import OutLog
-from utils.textures import extract_textures
 from viewer.obj_viewer import show_viewer
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,6 @@ class MainWindow(QWidget):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.build_ui()
-        self.build_ui_hyouta()
         self.build_ui_txm_txv_path()
         self.build_ui_extract_textures()
         self.build_ui_dat_path()
@@ -59,28 +59,9 @@ class MainWindow(QWidget):
 
     def build_ui(self):
         self.setWindowTitle("VesperiaTools")
-        self.setGeometry(300,300, 500,500)
+        self.setGeometry(300, 300, 500, 500)
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
-
-    def build_ui_hyouta(self):
-        self.hyouta_layout = QHBoxLayout()
-        self.hyouta_label = QLabel("HyoutaToolsCLI.exe Path: ")
-        self.hyouta_layout.addWidget(self.hyouta_label)
-        self.hyouta_path_lineedit = QLineEdit()
-        self.hyouta_layout.addWidget(self.hyouta_path_lineedit)
-        self.hyouta_browse_btn = QToolButton()
-        self.hyouta_browse_btn.setText("...")
-        self.hyouta_browse_btn.clicked.connect(
-            partial(
-                self.browse_file,
-                self.hyouta_path_lineedit,
-                "Path to HyoutaToolsCLI.exe",
-                "HyoutaToolsCLI.exe (*.exe)",
-            )
-        )
-        self.hyouta_layout.addWidget(self.hyouta_browse_btn)
-        self.main_layout.addLayout(self.hyouta_layout)
 
     def build_ui_txm_txv_path(self):
         self.txm_txv_layout = QHBoxLayout()
@@ -136,14 +117,9 @@ class MainWindow(QWidget):
 
     def build_ui_unpack_dat(self):
         self.unpack_dat_layout = QHBoxLayout()
-        self.unpack_dat_deep_checkbox = QCheckBox("Deep Extract")
-        self.unpack_dat_deep_checkbox.setToolTip(
-            'Handle assets like CH which unpacked as "0000", "0001" and so on'
-        )
         self.unpack_dat_btn = QPushButton("Unpack DAT")
         self.unpack_dat_btn.clicked.connect(self.run_unpack_dat)
         self.unpack_dat_layout.addStretch(0)
-        self.unpack_dat_layout.addWidget(self.unpack_dat_deep_checkbox)
         self.unpack_dat_layout.addWidget(self.unpack_dat_btn)
         self.main_layout.addLayout(self.unpack_dat_layout)
 
@@ -272,7 +248,6 @@ class MainWindow(QWidget):
 
     def populate_lineedit_path(self):
         if os.path.exists(CONFIG_JSON):
-            self.hyouta_path_lineedit.setText(get_path("hyoutatools_path"))
             self.txm_txv_path_lineedit.setText(get_path("txm_txv_path"))
             self.dat_path_lineedit.setText(get_path("dat_path"))
             self.svo_path_lineedit.setText(get_path("svo_path"))
@@ -333,29 +308,28 @@ class MainWindow(QWidget):
         export_dds_textures(txm_txv_path, output_path)
 
     def run_unpack_dat(self):
-        if not self.hyouta_path_lineedit.text() or not self.dat_path_lineedit.text():
+        if not self.dat_path_lineedit.text():
             QMessageBox.warning(
                 self,
                 "Warning",
-                "Ensure both HyoutaToolsCLI.exe and DAT paths are selected before extracting!",
+                "Ensure DAT path are selected before extracting!",
             )
             return
         self.update_config_json()
-        unpack_dat(
+        parse_dat(
             self.dat_path_lineedit.text(),
-            deep_extract=self.unpack_dat_deep_checkbox.isChecked(),
         )
 
     def run_extract_svo(self):
-        if not self.hyouta_path_lineedit.text() or not self.svo_path_lineedit.text():
+        if not self.svo_path_lineedit.text():
             QMessageBox.warning(
                 self,
                 "Warning",
-                "Ensure both HyoutaToolsCLI.exe and SVO paths are selected before extracting!",
+                "Ensure SVO path are selected before extracting!",
             )
             return
         self.update_config_json()
-        extract_svo(self.svo_path_lineedit.text())
+        parse_svo(self.svo_path_lineedit.text())
 
     def run_export_spm_spv(self):
         spm_spv_path = self.spm_spv_path_lineedit.text()
@@ -396,7 +370,6 @@ class MainWindow(QWidget):
         show_viewer(obj_path)
 
     def update_config_json(self):
-        set_hyoutatools_path(self.hyouta_path_lineedit.text())
         set_txm_txm_path(self.txm_txv_path_lineedit.text())
         set_dat_path(self.dat_path_lineedit.text())
         set_svo_path(self.svo_path_lineedit.text())

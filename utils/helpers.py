@@ -8,7 +8,6 @@ def create_config_json():
     with open(CONFIG_JSON, "w") as f:
         data = json.dumps(
             {
-                "hyoutatools_path": "",
                 "txm_txv_path": "",
                 "dat_path": "",
                 "svo_path": "",
@@ -40,10 +39,6 @@ def get_path(config_key):
         data = json.load(f)
     path = data.get(config_key) or ""
     return os.path.normpath(path)
-
-
-def set_hyoutatools_path(path):
-    set_path("hyoutatools_path", path)
 
 
 def set_txm_txm_path(path):

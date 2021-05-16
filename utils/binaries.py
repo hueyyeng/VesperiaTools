@@ -1,5 +1,8 @@
 import array
+import logging
 import struct
+
+logger = logging.getLogger(__name__)
 
 
 def half_to_float(h):
@@ -16,7 +19,6 @@ def half_to_float(h):
                 e -= 1
             e += 1
             f &= ~0x00000400
-        # print s,e,f
     elif e == 31:
         if f == 0:
             return int((s << 31) | 0x7f800000)
@@ -169,7 +171,9 @@ class BinaryReader():
         offset = self.input_file.tell()
         data = struct.unpack(self.endian + n * 'q', self.input_file.read(n * 8))
         if self.debug:
-            print('q', data)
+            logger.debug({
+                "data": data,
+            })
         if self.log:
             if self.logfile is not None and self.logskip is not True:
                 self.logfile.write('offset ' + str(offset) + '	' + str(data) + '\n')
@@ -180,7 +184,6 @@ class BinaryReader():
             offset = self.input_file.tell()
             if self.xorKey is None:
                 if self.ARRAY is False:
-                    # print("self.ARRAY is False")
                     data = struct.unpack(self.endian + n * 'i', self.input_file.read(n * 4))
                 else:
                     data = array.array('i')
@@ -193,7 +196,9 @@ class BinaryReader():
                 data = struct.unpack(self.endian + n * 'i', self.xorData)
 
             if self.debug:
-                print('i', data)
+                logger.debug({
+                    "data": data,
+                })
             if self.log:
                 if self.logfile is not None and self.logskip is not True:
                     self.logfile.write('offset ' + str(offset) + '	' + str(data) + '\n')
@@ -213,7 +218,9 @@ class BinaryReader():
             self.XOR(data)
             data = struct.unpack(self.endian + n * 'I', self.xorData)
         if self.debug:
-            print('I', data)
+            logger.debug({
+                "data": data,
+            })
         if self.log:
             if self.logfile is not None and self.logskip is not True:
                 self.logfile.write('offset ' + str(offset) + '	' + str(data) + '\n')
@@ -236,7 +243,9 @@ class BinaryReader():
                 self.XOR(data)
                 data = struct.unpack(self.endian + n * 'B', self.xorData)
             if self.debug:
-                print('B', data)
+                logger.debug({
+                    "data": data,
+                })
             if self.log:
                 if self.logfile is not None and self.logskip is not True:
                     self.logfile.write('offset ' + str(offset) + '	' + str(data) + '\n')
@@ -261,7 +270,9 @@ class BinaryReader():
                 self.XOR(data)
                 data = struct.unpack(self.endian + n * 'b', self.xorData)
             if self.debug:
-                print('b', data)
+                logger.debug({
+                    "data": data,
+                })
             if self.log:
                 if self.logfile is not None and self.logskip is not True:
                     self.logfile.write('offset ' + str(offset) + '	' + str(data) + '\n')
@@ -288,7 +299,9 @@ class BinaryReader():
                 self.XOR(data)
                 data = struct.unpack(self.endian + n * 'h', self.xorData)
             if self.debug:
-                print('h', data)
+                logger.debug({
+                    "data": data,
+                })
             if self.log:
                 if self.logfile is not None and self.logskip is not True:
                     self.logfile.write('offset ' + str(offset) + '	' + str(data) + '\n')
@@ -314,7 +327,9 @@ class BinaryReader():
                 self.XOR(data)
                 data = struct.unpack(self.endian + n * 'H', self.xorData)
             if self.debug:
-                print('H', data)
+                logger.debug({
+                    "data": data,
+                })
             if self.log:
                 if self.logfile is not None and self.logskip is not True:
                     self.logfile.write('offset ' + str(offset) + '	' + str(data) + '\n')
@@ -327,7 +342,6 @@ class BinaryReader():
     def f(self, n):
         if self.input_file.mode == 'rb':
             offset = self.input_file.tell()
-            # print("offset:", offset)
             if self.xorKey is None:
                 if not self.ARRAY:
                     data = struct.unpack(self.endian + n * 'f', self.input_file.read(n * 4))
@@ -341,7 +355,9 @@ class BinaryReader():
                 self.XOR(data)
                 data = struct.unpack(self.endian + n * 'f', self.xorData)
             if self.debug:
-                print('f', data)
+                logger.debug({
+                    "data": data,
+                })
             if self.log:
                 if self.logfile is not None and self.logskip is not True:
                     self.logfile.write('offset ' + str(offset) + '	' + str(data) + '\n')
@@ -362,7 +378,9 @@ class BinaryReader():
                 self.XOR(data)
                 data = struct.unpack(self.endian + n * 'd', self.xorData)
             if self.debug:
-                print('d', data)
+                logger.debug({
+                    "data": data,
+                })
             if self.log:
                 if self.logfile is not None and self.logskip is not True:
                     self.logfile.write('offset ' + str(offset) + '	' + str(data) + '\n')
@@ -376,10 +394,11 @@ class BinaryReader():
         array = []
         offset = self.input_file.tell()
         for id in range(n):
-            # array.append(converthalf2float(struct.unpack(self.endian+'H',self.inputFile.read(2))[0]))
             array.append(convert_half_to_float(struct.unpack(self.endian + h, self.input_file.read(2))[0]))
         if self.debug:
-            print('half', array)
+            logger.debug({
+                "array": array,
+            })
         if self.log:
             if self.logfile is not None and self.logskip is not True:
                 self.logfile.write('offset ' + str(offset) + '	' + str(array) + '\n')
@@ -390,9 +409,10 @@ class BinaryReader():
         offset = self.input_file.tell()
         for id in range(n):
             array.append(struct.unpack(self.endian + h, self.input_file.read(2))[0] * 2 ** -exp)
-        # array.append(self.H(1)[0]*2**-exp)
         if self.debug:
-            print('short', array)
+            logger.debug({
+                "array": array,
+            })
         if self.log:
             if self.logfile is not None and self.logskip is not True:
                 self.logfile.write('offset ' + str(offset) + '	' + str(array) + '\n')
@@ -408,48 +428,56 @@ class BinaryReader():
                 var = self.input_file.read(3) + '\x00'
             array.append(struct.unpack(self.endian + 'i', var)[0])
         if self.debug:
-            print(array)
+            logger.debug({
+                "array": array,
+            })
         if self.log:
             if self.logfile is not None and self.logskip is not True:
                 self.logfile.write('offset ' + str(offset) + '	' + str(array) + '\n')
         return array
 
     def find(self, values=b"\x00", size=100, all=None):
-        list = []
         start = self.input_file.tell()
-        print("find start:", start)
         s = ""
         while True:
             data = self.input_file.read(size + len(values))
-            # print("data size:", size + len(values))
-            # print("data:", data)
             off = data.find(values)
-            # print("off:", off)
-            print(f"tell: {start}, fileSize: {self.fileSize()}")
+
             if start >= self.fileSize():
-                print(f"loop break 1: {self.input_file.tell()} >= {self.fileSize()}")
+                logger.debug({
+                    "msg": "start >= fileSize",
+                    "start": start,
+                    "fileSize": self.fileSize(),
+                })
                 break
             if off >= 0:
                 decoded_name = data[:off].decode()
                 s += decoded_name
                 self.input_file.seek(start + off + len(values))
-                print(f"loop break 2: off {off} >= 0")
+                logger.debug({
+                    "msg": "off >= 0",
+                    "off": off,
+                })
                 break
             else:
                 self.input_file.seek(-len(values), 1)
                 s += data
                 start += size
-                print(f"s: {s}, start: {start}")
+                logger.debug({
+                    "s": s,
+                    "start": start,
+                })
 
         if self.debug:
-            print(s)
+            logger.debug({
+                "s": s,
+            })
         if self.log:
             if self.logfile is not None and self.logskip is not True:
                 self.logfile.write('offset ' + str(start) + '	' + s + '\n')
         return s
 
     def string(self, values="\x00", size=100):
-        list = []
         start = self.input_file.tell()
         s = ""
         while (True):
@@ -467,32 +495,29 @@ class BinaryReader():
                 break
 
         if self.debug:
-            # print(s)
-            pass
+            logger.debug({
+                "s": s,
+            })
         if self.log:
             if self.logfile is not None and self.logskip is not True:
                 self.logfile.write('offset ' + str(start) + '	' + s + '\n')
         return s
 
     def findAll(self, var, size=100):
-        list = []
-        while (True):
+        found_list = []
+        while True:
             start = self.input_file.tell()
             data = self.input_file.read(size)
             off = data.find(var)
-            # print off,self.inputFile.tell()
             if off >= 0:
-                list.append(start + off)
-                # print(start + off)
+                found_list.append(start + off)
                 self.input_file.seek(start + off + len(var))
-            # if self.debug==True:
-            # 	print(start + off)
             else:
                 start += size
                 self.input_file.seek(start)
             if self.input_file.tell() > self.fileSize():
                 break
-        return list
+        return found_list
 
     def fileSize(self):
         back = self.input_file.tell()
@@ -516,9 +541,7 @@ class BinaryReader():
 
     def read(self, count):
         back = self.input_file.tell()
-        print("self.xorKey", self.xorKey)
         if self.xorKey is None:
-            print("self.xorKey is None!!!")
             return self.input_file.read(count)
         else:
             data = struct.unpack(self.endian + count * 'B', self.input_file.read(count))
@@ -532,18 +555,15 @@ class BinaryReader():
         else:
             data = struct.unpack(self.endian + count * 'B', self.input_file.read(count))
             self.XOR(data)
-            print("self.xorKey is YES!!!")
             return self.xorData
 
     def unpack(self, values):
         # "5i6hi"
         count = ""
         type = None
-        # print(values)
         out = []
         for value in values:
-            # print(value,value.isdigit())
-            if value.isdigit() == True:
+            if value.isdigit():
                 count += value
             else:
                 type = value
@@ -576,7 +596,6 @@ class BinaryReader():
                     out.extend(self.short(count))
                 elif type == '_':
                     self.seek(count, 1)
-                # elif type=='i':self.i(count)
                 else:
                     print('are you sure ?:', type)
                 type = None
@@ -604,10 +623,13 @@ class BinaryReader():
                         data = struct.unpack(self.endian + 'B', self.input_file.read(1))
                         self.XOR(data)
                         lit = struct.unpack(self.endian + 'c', self.xorData)[0]
+                    lit = lit.decode()
                     if ord(lit) != 0:
                         s += lit
                 if self.debug:
-                    print(s)
+                    logger.debug({
+                        "s": s,
+                    })
                 if self.log:
                     if self.logfile is not None and self.logskip is not True:
                         self.logfile.write('offset ' + str(offset) + '	' + s + '\n')
@@ -615,8 +637,9 @@ class BinaryReader():
             if self.input_file.mode == 'wb':
                 self.input_file.write(long)
         else:
-            if self.debug:
-                print('WARNING:too long')
+            logger.debug({
+                "msg": "WARNING! Too long!",
+            })
 
     def decode(self, list):
         litery = 'qwertyuiopasdfghjklzxcvbnm'

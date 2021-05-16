@@ -4,10 +4,15 @@ import math  # Handle NaN value
 import struct
 import logging
 from pathlib import Path
+import zlib
+import re
+from dataclasses import dataclass
 
-from constants.tales import DDS_HEADER
+from constants.tales import DDS_HEADER, TYPE_2_EXT_PC
+from exceptions.files import InvalidFourCCException
 from parsers.models import Mesh
 from utils.binaries import BinaryReader
+from utils.files import check_fourcc
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +37,10 @@ class Node:
         self.offset = None
 
 
-def debug_mesh(node: Node, verbose=False):
+def debug_mesh(
+        node: Node,
+        verbose=False
+):
     """Debug found mesh from SPM package.
 
     Parameters
@@ -67,13 +75,22 @@ def debug_mesh(node: Node, verbose=False):
                     logger.debug("indice %03d : %s" % (face_idx, indice))
 
 
-def get_vertex_data(mesh, g, v1, v2, v3, v4, n, verbose=False):
+def get_vertex_data(
+        mesh: object,
+        g: BinaryReader,
+        v1: int,
+        v2: int,
+        v3: int,
+        v4: int,
+        n: int,
+        verbose=False,
+):
     """Get vertex data for skinned mesh.
 
     Parameters
     ----------
-    mesh : mesh
-    g : g
+    mesh : object
+    g : BinaryReader
     v1 : int
     v2 : int
     v3 : int
@@ -148,7 +165,11 @@ def get_vertex_data(mesh, g, v1, v2, v3, v4, n, verbose=False):
         mesh.skinWeightList.append([w4, w3, w2, w1])
 
 
-def parse_uv(file_path: str, node: Node, verbose=False):
+def parse_uv(
+        file_path: str,
+        node: Node,
+        verbose=False,
+):
     """Parse UV coordinates value.
 
     Parameters
@@ -203,7 +224,11 @@ def parse_uv(file_path: str, node: Node, verbose=False):
     g.close()
 
 
-def parse_mesh(file_path: str, node: Node, verbose=False):
+def parse_mesh(
+        file_path: str,
+        node: Node,
+        verbose=False,
+):
     """Parse mesh data from SPM (and SPV) package.
 
     The SPM and SPV files must be located in the same directory.
@@ -470,7 +495,11 @@ def parse_mesh(file_path: str, node: Node, verbose=False):
     g.close()
 
 
-def parse_material(file_path: str, node: Node, verbose=False):
+def parse_material(
+        file_path: str,
+        node: Node,
+        verbose=False,
+):
     """Parse material from MTR package.
 
     Parameters
@@ -560,7 +589,10 @@ def parse_material(file_path: str, node: Node, verbose=False):
     g.close()
 
 
-def find_substring_offset(context: bytes, substring: bytes):
+def find_substring_offset(
+        context: bytes,
+        substring: bytes,
+):
     """Find offset value between reoccurring substring in a context.
 
     Currently specific for TXV package.
@@ -669,8 +701,381 @@ def parse_textures(
         }
 
         image_list.append(image_data)
+        logger.info({
+            "msg": "Successfully parsed texture",
+            "texture_name": texture_name,
+        })
         logger.debug("tm: %s" % tm)
         g.seek(tm)
 
     node.data["image_list"] = image_list
     g.close()
+
+
+def parse_svo(
+        svo_path: str,
+        verbose=False,
+):
+    """Parse SVO package
+
+    Parameters
+    ----------
+    svo_path : str
+        Path to SVO file (e.g. 'path/to/PACKAGE.SVO')
+    verbose : bool
+
+    Notes
+    -----
+    - Based on Szkaradek123's Python 2 script for Blender 2.49.
+
+    """
+    check_fourcc("FPS4", svo_path)
+    svo_path = Path(svo_path)
+    svo_size = svo_path.stat().st_size
+    binary_file = open(svo_path, "rb")
+    g = BinaryReader(binary_file)
+    g.endian = ">"
+    g.word(4)
+    A = g.i(6)
+
+    filesizes = []
+    filenames = []
+    for member in range(A[0]):
+        offset = g.tell()
+        B = g.i(3)
+        filesizes.append(B)
+        name = g.find(b"\x00")
+        filenames.append(name)
+        g.seek(offset + 44)
+
+    offset = A[2]
+    for idx, member in enumerate(range(A[0])):
+        g.seek(offset)
+        data = g.read(filesizes[member][1])
+        g.seek(offset + filesizes[member][1])
+        g.seekpad(128)
+        offset = g.tell()
+        if filenames[member]:
+            logger.info(f"Progress completion: {round((offset / svo_size * 100), 2)}%")
+            parsed_svo_path = svo_path.parent / svo_path.name.split('.')[0] / filenames[member]
+            parsed_svo_path.parent.mkdir(parents=True, exist_ok=True)
+            logger.debug({
+                "msg": "Parsing SVO package",
+                "package_name": filenames[member],
+                "parsed_svo_path": str(parsed_svo_path),
+            })
+            with parsed_svo_path.open("wb") as f:
+                f.write(data)
+
+    g.close()
+    logger.info(f"Parsed SVO {svo_path.name} completed.")
+
+
+def parse_dat(
+        dat_path: str,
+        verbose=False,
+):
+    """Parse DAT file from SVO package
+
+    Parameters
+    ----------
+    dat_path : str
+        Path to DAT file (e.g. 'path/to/PACKAGE.DAT')
+    verbose : bool
+
+    Notes
+    -----
+    - Based on Szkaradek123's Python 2 script for Blender 2.49.
+
+    """
+    check_fourcc("TLZC", dat_path)
+    dat_path = Path(dat_path)
+    binary_file = open(dat_path, "rb")
+    g = BinaryReader(binary_file)
+    g.word(4)
+    g.i(5)
+
+    dec_path = dat_path.parent / f"{dat_path.name}.dec"
+    with open(dec_path, "wb") as dec_file:
+        data = g.read(g.fileSize() - g.tell())
+        data = zlib.decompress(data)
+        dec_file.write(data)
+
+    g.close()
+    logger.info(f"Parse DAT as {dat_path.name}.dec completed.")
+
+
+def parse_fps4(
+        g: BinaryReader,
+        n: int,
+        parent_node: Node,
+        verbose=False,
+):
+    """Parse FPS4 package
+
+    Parameters
+    ----------
+    g : BinaryReader
+    n : int
+    parent_node : Node
+    verbose : bool
+
+    Notes
+    -----
+    - Based on Szkaradek123's Python 2 script for Blender 2.49.
+
+    """
+    node = parent_node
+    current_offset = g.tell()
+    node.offset = current_offset
+    fourcc = g.word(4)
+
+    if fourcc != "FPS4":
+        raise InvalidFourCCException("FPS4", fourcc)
+
+    n += 4
+    A = g.unpack("3i2H2i")
+    logger.debug({
+        "current_offset": current_offset,
+        "fourcc": fourcc,
+        "A": A,
+        "n": n,
+    })
+    g.seek(current_offset + A[1])
+    B = []
+    for m in range(A[0]):
+        B.append(g.i(A[3] // 4))
+
+    for idx, b in enumerate(B):
+        logger.debug({
+            "msg": f"Loop B - {idx:04}",
+        })
+        if b[0] > 0:
+            logger.debug({
+                "b": b,
+            })
+            name = None
+            if len(b) > 3:
+                g.seek(current_offset + b[3])
+                name = g.find(b"\x00")
+
+            g.seek(current_offset + b[0])
+            logger.debug({
+                "name": name,
+                "size": b[1],
+                "n": n,
+            })
+            node.data[f"{idx:04}"] = {
+                "name": name,
+                "offset_start": b[0],
+                "offset_end": b[0] + b[1],
+            }
+
+    logger.info(f"Parsed FPS4 completed")
+
+
+def parse_dec_ext(
+        dec_ext_path: str,
+        verbose=False,
+):
+    """Parse unknown extracted files from parsed DAT.dec
+
+    Parameters
+    ----------
+    dec_ext_path : str
+        Path to unknown file (e.g. 'path/to/PACKAGE.DAT.dec.ext/0000')
+    verbose : bool
+
+    Notes
+    -----
+    - Based on Szkaradek123's Python 2 script for Blender 2.49.
+
+    """
+    dec_ext_path = Path(dec_ext_path)
+
+    binary_file = open(dec_ext_path, "rb")
+
+    g = BinaryReader(binary_file)
+    g.endian = ">"
+    n = 0
+    node = Node()
+    parse_fps4(g, n, node)
+    g.close()
+
+    with open(dec_ext_path, "rb") as dec_ext_file:
+        dec_ext_content = dec_ext_file.read()
+
+    dec_ext_ext_path = Path(f"{dec_ext_path}.ext")
+    for k, v in node.data.items():
+        unknown_file_path = dec_ext_ext_path / f"{v['name']}.{k}"
+        unknown_file_path.parent.mkdir(parents=True, exist_ok=True)
+        with unknown_file_path.open("wb") as f:
+            f.write(dec_ext_content[v["offset_start"]:v["offset_end"]])
+
+    logger.info(f"Parse unknown files as {dec_ext_ext_path.name}.dec.ext completed.")
+
+
+@dataclass
+class Package:
+    name: str = 'NONAME'
+    offset: int = 0
+
+
+def get_package_names(
+        file_path: Path,
+        generic_pattern=False,
+):
+    """Get package names
+
+    Parameters
+    ----------
+    file_path : Path
+    generic_pattern : bool
+        Use generic regex pattern for package name. Default False.
+
+    Returns
+    -------
+    list
+        List of found package names matching the regex pattern
+
+    """
+    asset_name = file_path.name.split(".")[0]
+    asset_name_underscore = "_".join([asset_name[:3], asset_name[3:]])
+    if "_" in asset_name:
+        asset_name_split = asset_name.split("_")
+        if len(asset_name_split) > 4:
+            asset_name_underscore = "_".join([
+                asset_name_split[1][-3:],
+                asset_name_split[2],
+                asset_name_split[3],
+            ])
+        if 2 < len(asset_name_split) <= 4:
+            asset_name_underscore = "_".join([
+                asset_name_split[0][-3:],
+                asset_name_split[1],
+                asset_name_split[2],
+            ])
+        if len(asset_name_split) == 2:
+            asset_name_underscore = "_".join([
+                f"{asset_name_split[0][:3]}_{asset_name_split[0][3:]}",
+                asset_name_split[1],
+            ])
+        logger.debug({
+            "msg": "Split Asset Name",
+            "asset_name_split": asset_name_split,
+            "asset_name_underscore": asset_name_underscore,
+        })
+    with file_path.open("rb") as f:
+        data = f.read()
+
+    package_names = []
+    current_offset = 0
+    package_name_pattern = "".join([
+        r"(\w_\w{3}_|\w{3}_|)",
+        f"({asset_name_underscore}" + r"_\w{1,3}|" + f"{asset_name_underscore})",
+        r"[.]\w{3}",
+    ])
+    if generic_pattern:
+        package_name_pattern = r"([A-Z_\d]+)[.]\w{3}"
+    print("package_name_pattern", package_name_pattern)
+    logger.info({
+        "msg": "Possible package name pattern",
+        "pattern": package_name_pattern,
+    })
+    pattern = re.compile(package_name_pattern.encode())
+    while True:
+        match = pattern.search(data[current_offset:])
+        if match is None:
+            break
+        package = Package()
+        package.name = match.group(0).decode()
+        package.offset = current_offset
+        package_names.append(package)
+        current_offset += match.end()
+
+    return package_names
+
+
+def parse_dec(
+        dec_path: str,
+        verbose=False,
+):
+    """Parse DEC file from parsed DAT
+
+    Parameters
+    ----------
+    dec_path : str
+        Path to DEC file (e.g. 'path/to/PACKAGE.DAT.dec')
+    verbose : bool
+
+    Notes
+    -----
+    - Based on Szkaradek123's Python 2 script for Blender 2.49.
+
+    """
+    dec_path = Path(dec_path)
+
+    # 1. Search for possible package names
+    package_names = get_package_names(dec_path)
+
+    # 2. Parse data
+    binary_file = open(dec_path, "rb")
+
+    g = BinaryReader(binary_file)
+    g.endian = ">"
+    n = 0
+    node = Node()
+    parse_fps4(g, n, node)
+    g.close()
+
+    # 3. Write out parsed data
+    is_tex_package = False
+    if "TEX" in dec_path.name:
+        is_tex_package = True
+
+    with open(dec_path, "rb") as dec_file:
+        dec_content = dec_file.read()
+
+    dec_ext_path = Path(f"{dec_path}.ext")
+    dec_ext_path.mkdir(exist_ok=True)
+
+    print("package_names", len(package_names))
+    print("node.data.keys", len(node.data.keys()), node.data.keys())
+    for idx, pn in enumerate(package_names):
+        print(idx, pn.name)
+
+    if len(package_names) < len(node.data.keys()):
+        package_names = get_package_names(
+            dec_path,
+            generic_pattern=True,
+        )[:len(node.data.keys())]
+    print("package_names", len(package_names))
+    print("node.data.keys", len(node.data.keys()), node.data.keys())
+    for idx, pn in enumerate(package_names):
+        print(idx, pn.name)
+
+    verify_fourcc = True
+    for idx, (k, v) in enumerate(node.data.items()):
+        if len(package_names) == len(node.data.keys()):
+            k = package_names[idx].name
+            verify_fourcc = False
+
+        print("\n\nk 1", k)
+        fourcc = dec_content[v["offset_start"]:v["offset_start"]+4].hex().upper()
+        fourcc_dds = dec_content[v["offset_start"]:v["offset_start"]+8].hex().upper()
+        basename = k.split('.')[0]
+        if is_tex_package:
+            input_file = dec_path.name.split('.')
+            k = '.'.join([
+                input_file[0],
+                input_file[1],
+            ])
+        if verify_fourcc and fourcc in TYPE_2_EXT_PC.keys():
+            k = f"{basename}{TYPE_2_EXT_PC[fourcc]}"
+        if DDS_HEADER.hex() in fourcc_dds:
+            k = f"{basename}.TXV"
+        print("k 2", k)
+        with (dec_ext_path / k).open("wb") as f:
+            f.write(dec_content[v["offset_start"]:v["offset_end"]])
+
+    logger.info(f"Parse DAT dec as {dec_path.name}.ext completed.")
