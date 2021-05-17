@@ -10,6 +10,7 @@ def create_config_json():
             {
                 "txm_txv_path": "",
                 "dat_path": "",
+                "datdecext_path": "",
                 "svo_path": "",
                 "spm_spv_path": "",
                 "obj_path": "",
@@ -47,6 +48,14 @@ def set_txm_txm_path(path):
 
 def set_dat_path(path):
     set_path("dat_path", path)
+
+
+def set_dec_path(path):
+    set_path("dec_path", path)
+
+
+def set_datdecext_path(path):
+    set_path("datdecext_path", path)
 
 
 def set_svo_path(path):

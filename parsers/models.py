@@ -1,4 +1,11 @@
 """Object models for data extraction."""
+from dataclasses import dataclass
+
+
+@dataclass
+class Package:
+    name: str = 'NONAME'
+    offset: int = 0
 
 
 class Mesh:

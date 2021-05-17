@@ -1,18 +1,25 @@
 """Parser for Vesperia data objects."""
-import os
-import math  # Handle NaN value
-import struct
 import logging
-from pathlib import Path
-import zlib
+import math  # Handle NaN value
+import os
 import re
-from dataclasses import dataclass
+import struct
+import zlib
+from pathlib import Path
 
-from constants.tales import DDS_HEADER, TYPE_2_EXT_PC
-from exceptions.files import InvalidFourCCException
-from parsers.models import Mesh
+from constants.tales import (
+    DDS_HEADER,
+    TYPE_2_EXT_PC,
+)
+from exceptions.files import (
+    InvalidFourCCException,
+)
+from parsers.models import Mesh, Package
 from utils.binaries import BinaryReader
-from utils.files import check_fourcc
+from utils.files import (
+    check_fourcc,
+    rename_unknown_files_ext,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -912,13 +919,9 @@ def parse_dec_ext(
         with unknown_file_path.open("wb") as f:
             f.write(dec_ext_content[v["offset_start"]:v["offset_end"]])
 
+        rename_unknown_files_ext(str(dec_ext_ext_path))
+
     logger.info(f"Parse unknown files as {dec_ext_ext_path.name}.dec.ext completed.")
-
-
-@dataclass
-class Package:
-    name: str = 'NONAME'
-    offset: int = 0
 
 
 def get_package_names(
@@ -965,6 +968,7 @@ def get_package_names(
             "asset_name_split": asset_name_split,
             "asset_name_underscore": asset_name_underscore,
         })
+
     with file_path.open("rb") as f:
         data = f.read()
 
@@ -977,11 +981,12 @@ def get_package_names(
     ])
     if generic_pattern:
         package_name_pattern = r"([A-Z_\d]+)[.]\w{3}"
-    print("package_name_pattern", package_name_pattern)
+
     logger.info({
         "msg": "Possible package name pattern",
         "pattern": package_name_pattern,
     })
+
     pattern = re.compile(package_name_pattern.encode())
     while True:
         match = pattern.search(data[current_offset:])
@@ -1039,31 +1044,24 @@ def parse_dec(
     dec_ext_path = Path(f"{dec_path}.ext")
     dec_ext_path.mkdir(exist_ok=True)
 
-    print("package_names", len(package_names))
-    print("node.data.keys", len(node.data.keys()), node.data.keys())
-    for idx, pn in enumerate(package_names):
-        print(idx, pn.name)
-
     if len(package_names) < len(node.data.keys()):
         package_names = get_package_names(
             dec_path,
             generic_pattern=True,
         )[:len(node.data.keys())]
-    print("package_names", len(package_names))
-    print("node.data.keys", len(node.data.keys()), node.data.keys())
-    for idx, pn in enumerate(package_names):
-        print(idx, pn.name)
 
     verify_fourcc = True
     for idx, (k, v) in enumerate(node.data.items()):
+        old_name = k
+
         if len(package_names) == len(node.data.keys()):
             k = package_names[idx].name
             verify_fourcc = False
 
-        print("\n\nk 1", k)
         fourcc = dec_content[v["offset_start"]:v["offset_start"]+4].hex().upper()
         fourcc_dds = dec_content[v["offset_start"]:v["offset_start"]+8].hex().upper()
         basename = k.split('.')[0]
+
         if is_tex_package:
             input_file = dec_path.name.split('.')
             k = '.'.join([
@@ -1074,7 +1072,13 @@ def parse_dec(
             k = f"{basename}{TYPE_2_EXT_PC[fourcc]}"
         if DDS_HEADER.hex() in fourcc_dds:
             k = f"{basename}.TXV"
-        print("k 2", k)
+
+        new_name = k
+        logger.debug({
+            "msg": "filename",
+            "old_name": old_name,
+            "new_name": new_name,
+        })
         with (dec_ext_path / k).open("wb") as f:
             f.write(dec_content[v["offset_start"]:v["offset_end"]])
 

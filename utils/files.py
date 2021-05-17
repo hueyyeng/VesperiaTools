@@ -1,6 +1,7 @@
 """Vesperia Tools Files."""
 import logging
 import os
+from pathlib import Path
 
 from constants import tales
 from exceptions.files import (
@@ -71,25 +72,22 @@ def rename_unknown_files_ext(dir_path: str):
     dir_path : str
 
     """
-    file_names = os.listdir(dir_path)
-    for file_name in file_names:
-        file_path = os.path.join(
-            dir_path,
-            file_name,
-        )
+    for file_path in Path(dir_path).rglob("*"):
+        if file_path.is_file() and file_path.suffix:
+            with file_path.open("rb") as f:
+                file_header = f.read(4).hex()
 
-        with open(file_path, "rb") as f:
-            file_header = f.read(4).hex()
+            # Default to TXV as TXV header has slight variation for 2nd and 3rd bytes
+            extension = ".TXV"
+            file_header = file_header.upper()
+            if file_header in tales.TYPE_2_EXT_PC.keys():
+                extension = tales.TYPE_2_EXT_PC[file_header]
 
-        # Default to TXV as TXV header has slight variation for 2nd and 3rd bytes
-        extension = ".TXV"
-        file_header = file_header.upper()
-        if file_header in tales.TYPE_2_EXT_PC.keys():
-            extension = tales.TYPE_2_EXT_PC[file_header]
-
-        file_path_basename = os.path.splitext(file_path)[0]
-        file_path_rename = f"{file_path_basename}{extension}"
-        os.rename(file_path, file_path_rename)
+            logger.debug({
+                "file_path": file_path,
+                "extension": extension,
+            })
+            file_path.rename(file_path.with_suffix(extension))
 
 
 def cleanup_leftover_files(dir_path, cleanup_files):

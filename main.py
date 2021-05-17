@@ -11,6 +11,8 @@ from constants.path import CONFIG_JSON
 from constants.ui import GITHUB_REPO_URL
 from parsers.parser import (
     parse_dat,
+    parse_dec,
+    parse_dec_ext,
     parse_svo,
 )
 from utils.exporter import (
@@ -22,6 +24,8 @@ from utils.helpers import (
     create_config_json,
     get_path,
     set_dat_path,
+    set_dec_path,
+    set_datdecext_path,
     set_obj_path,
     set_spm_spv_path,
     set_mtr_path,
@@ -43,6 +47,10 @@ class MainWindow(QWidget):
         self.build_ui_extract_textures()
         self.build_ui_dat_path()
         self.build_ui_unpack_dat()
+        self.build_ui_dec_path()
+        self.build_ui_unpack_dec()
+        self.build_ui_datdecext_unknown_path()
+        self.build_ui_unpack_datdecext_unknown()
         self.build_ui_svo_path()
         self.build_ui_extract_svo()
         self.build_ui_spm_spv_path()
@@ -122,6 +130,60 @@ class MainWindow(QWidget):
         self.unpack_dat_layout.addStretch(0)
         self.unpack_dat_layout.addWidget(self.unpack_dat_btn)
         self.main_layout.addLayout(self.unpack_dat_layout)
+
+    def build_ui_dec_path(self):
+        self.dec_path_layout = QHBoxLayout()
+        self.dec_path_label = QLabel("DEC Path: ")
+        self.dec_path_layout.addWidget(self.dec_path_label)
+        self.dec_path_lineedit = QLineEdit()
+        self.dec_path_layout.addWidget(self.dec_path_lineedit)
+        self.dec_path_browse_btn = QToolButton()
+        self.dec_path_browse_btn.setText("...")
+        self.dec_path_browse_btn.clicked.connect(
+            partial(
+                self.browse_file,
+                self.dec_path_lineedit,
+                "Path to DEC files",
+                "DEC Files (*.dec)",
+            )
+        )
+        self.dec_path_layout.addWidget(self.dec_path_browse_btn)
+        self.main_layout.addLayout(self.dec_path_layout)
+
+    def build_ui_unpack_dec(self):
+        self.unpack_dec_layout = QHBoxLayout()
+        self.unpack_dec_btn = QPushButton("Unpack DEC")
+        self.unpack_dec_btn.clicked.connect(self.run_unpack_dec)
+        self.unpack_dec_layout.addStretch(0)
+        self.unpack_dec_layout.addWidget(self.unpack_dec_btn)
+        self.main_layout.addLayout(self.unpack_dec_layout)
+
+    def build_ui_datdecext_unknown_path(self):
+        self.datdecext_layout = QHBoxLayout()
+        self.datdecext_label = QLabel("DAT.dec.ext Unknown File Path: ")
+        self.datdecext_layout.addWidget(self.datdecext_label)
+        self.datdecext_lineedit = QLineEdit()
+        self.datdecext_layout.addWidget(self.datdecext_lineedit)
+        self.datdecext_browse_btn = QToolButton()
+        self.datdecext_browse_btn.setText("...")
+        self.datdecext_browse_btn.clicked.connect(
+            partial(
+                self.browse_file,
+                self.datdecext_lineedit,
+                "Path to DAT.dec.ext Unknown files",
+                "DAT.dec.ext Unknown Files (0000 0001 0002 0003 *.FPS4)",
+            )
+        )
+        self.datdecext_layout.addWidget(self.datdecext_browse_btn)
+        self.main_layout.addLayout(self.datdecext_layout)
+
+    def build_ui_unpack_datdecext_unknown(self):
+        self.unpack_datdecext_layout = QHBoxLayout()
+        self.unpack_datdecext_btn = QPushButton("Unpack DAT.dec.ext unknown file")
+        self.unpack_datdecext_btn.clicked.connect(self.run_unpack_datdecext)
+        self.unpack_datdecext_layout.addStretch(0)
+        self.unpack_datdecext_layout.addWidget(self.unpack_datdecext_btn)
+        self.main_layout.addLayout(self.unpack_datdecext_layout)
 
     def build_ui_svo_path(self):
         self.svo_path_layout = QHBoxLayout()
@@ -250,6 +312,8 @@ class MainWindow(QWidget):
         if os.path.exists(CONFIG_JSON):
             self.txm_txv_path_lineedit.setText(get_path("txm_txv_path"))
             self.dat_path_lineedit.setText(get_path("dat_path"))
+            self.dec_path_lineedit.setText(get_path("dec_path"))
+            self.datdecext_lineedit.setText(get_path("datdecext_path"))
             self.svo_path_lineedit.setText(get_path("svo_path"))
             self.spm_spv_path_lineedit.setText(get_path("spm_spv_path"))
             self.mtr_path_lineedit.setText(get_path("mtr_path"))
@@ -320,6 +384,32 @@ class MainWindow(QWidget):
             self.dat_path_lineedit.text(),
         )
 
+    def run_unpack_dec(self):
+        if not self.dec_path_lineedit.text():
+            QMessageBox.warning(
+                self,
+                "Warning",
+                "Ensure DEC path are selected before extracting!",
+            )
+            return
+        self.update_config_json()
+        parse_dec(
+            self.dec_path_lineedit.text(),
+        )
+
+    def run_unpack_datdecext(self):
+        if not self.datdecext_lineedit.text():
+            QMessageBox.warning(
+                self,
+                "Warning",
+                "Ensure DAT.dec.ext path are selected before extracting!",
+            )
+            return
+        self.update_config_json()
+        parse_dec_ext(
+            self.datdecext_lineedit.text(),
+        )
+
     def run_extract_svo(self):
         if not self.svo_path_lineedit.text():
             QMessageBox.warning(
@@ -372,6 +462,8 @@ class MainWindow(QWidget):
     def update_config_json(self):
         set_txm_txm_path(self.txm_txv_path_lineedit.text())
         set_dat_path(self.dat_path_lineedit.text())
+        set_dec_path(self.dec_path_lineedit.text())
+        set_datdecext_path(self.datdecext_lineedit.text())
         set_svo_path(self.svo_path_lineedit.text())
         set_spm_spv_path(self.spm_spv_path_lineedit.text())
         set_mtr_path(self.mtr_path_lineedit.text())
