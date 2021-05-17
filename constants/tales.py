@@ -20,7 +20,7 @@ UNPACKED_LEFTOVER_FILES = (
 # Note 1: PC identifier differs with 360 version.
 # Note 2: The PS4/XBO Definitive Edition should share the same identifier?
 # Note 3: Haven't check for PS3 and Switch DE.
-# TODO: Find a better way to identify TXV files
+# TODO: Find a better way to identify TXV and SPV files
 TYPE_2_EXT_PC = {
     "00040000": ".ANM",
     "00000500": ".BLD",
@@ -30,7 +30,9 @@ TYPE_2_EXT_PC = {
     "00000300": ".MTR",
     "00000400": ".SHD",
     "00000100": ".SPM",
-    "FFFFFFFF": ".SPV",
+    "FFFFFFFF": ".SPV",  # CH models
+    "85E31044": ".SPV",  # BG models
+    "00F51046": ".SPV",  # Unknown models?
     "54525348": ".TER",
     "00020000": ".TXM",
     "00155094": ".TXV",
@@ -115,4 +117,4 @@ PLATFORM_PC = 0x10
 TYPE_CODE = 0x00010000
 
 # Textures
-DDS_HEADER = b'\x44\x44\x53\x20\x7C'
+DDS_HEADER = b'\x44\x44\x53\x20'
