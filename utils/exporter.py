@@ -1,4 +1,5 @@
 """VesperiaTools Exporter."""
+from pathlib import Path
 import logging
 import os
 
@@ -37,15 +38,16 @@ def join_mtl_files(mtl_files_path: str, mtl_name: str = None):
     - Based on delguoqing's Python 2 script for Vesperia 360
 
     """
+    mtl_files_path = Path(mtl_files_path)
     file_names = os.listdir(mtl_files_path)
     mtls = set()
     for file_name in file_names:
-        mtl_file_path = os.path.join(mtl_files_path, file_name)
-        if file_name.endswith("all.mtl"):
+        mtl_file_path = mtl_files_path / file_name
+        if file_name.endswith("all.mtl") or not mtl_file_path.suffix == ".mtl":
             continue
 
         with open(mtl_file_path, "r") as mtl_file:
-            mtls.add(mtl_file.read())
+            mtls.add(mtl_file.read() + "\n")
 
     if not mtl_name:
         mtl_name = "all.mtl"
