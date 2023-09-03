@@ -1,6 +1,10 @@
 """Object models for data extraction."""
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import TypedDict, List, Dict
+from typing import Dict, List
+
+from typing_extensions import NotRequired, TypedDict
 
 
 @dataclass
@@ -116,10 +120,10 @@ class TNodeData(TypedDict):
     name: str
     offset_start: int
     offset_end: int
-    hash_list: List[int]
-    mesh_list: List[Mesh]
-    material_list: List[List[TMaterial]]
-    image_list: List[TImage]
+    hash_list: NotRequired[List[int]]
+    mesh_list: NotRequired[List[Mesh]]
+    material_list: NotRequired[List[List[TMaterial]]]
+    image_list: NotRequired[List[TImage]]
 
 
 class Node:
