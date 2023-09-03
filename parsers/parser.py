@@ -897,7 +897,8 @@ def parse_dec_ext(
 
     dec_ext_ext_path = Path(f"{dec_ext_path}.ext")
     for k, v in node.data.items():
-        unknown_file_path = dec_ext_ext_path / f"{v['name']}.{k}"
+        name_ = v["name"]
+        unknown_file_path = dec_ext_ext_path / f"{name_}.{k}"
         unknown_file_path.parent.mkdir(parents=True, exist_ok=True)
         with unknown_file_path.open("wb") as f:
             f.write(dec_ext_content[v["offset_start"]:v["offset_end"]])
@@ -1045,6 +1046,10 @@ def parse_dec(
         v: TNodeData
 
         old_name = k
+
+        if old_name == "_":
+            # Skip as possible redundant bytes padding
+            continue
 
         if package_names_total == data_keys_total:
             k = package_names[idx].name
