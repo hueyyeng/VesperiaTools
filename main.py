@@ -8,7 +8,7 @@ from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 
 from constants.path import CONFIG_JSON
-from constants.ui import GITHUB_REPO_URL
+from constants.ui import DOUBLE_LINEBREAKS, GITHUB_REPO_URL
 from parsers.parser import (
     parse_dat,
     parse_dec,
@@ -63,11 +63,11 @@ class MainWindow(QWidget):
         self.build_ui_repo_url()
         self.populate_lineedit_path()
         self.set_logging()
-        self.show()
 
     def build_ui(self):
+        self.setWindowIcon(QIcon("icon.png"))
         self.setWindowTitle("VesperiaTools")
-        self.setGeometry(300, 300, 500, 500)
+        self.setGeometry(300, 300, 640, 500)
         self.main_layout = QVBoxLayout()
         self.setLayout(self.main_layout)
 
@@ -77,10 +77,10 @@ class MainWindow(QWidget):
         self.txm_txv_layout.addWidget(self.txm_txv_label)
         self.txm_txv_path_lineedit = QLineEdit()
         self.txm_txv_path_lineedit.setToolTip(
-            "The TXM/TXV path must contains both TXM and TXV files "
-            "of the same name."
-            "\n\n"
-            "E.g.: CAPTEX.TXM and CAPTEX.TXV"
+            f"The TXM/TXV path must contains both TXM and TXV files "
+            f"of the same name."
+            f"{DOUBLE_LINEBREAKS}"
+            f"E.g.: CAPTEX.TXM and CAPTEX.TXV"
         )
         self.txm_txv_layout.addWidget(self.txm_txv_path_lineedit)
         self.txm_txv_browser_btn = QToolButton()
@@ -324,7 +324,7 @@ class MainWindow(QWidget):
     def set_logging(self):
         sys.stdout = OutLog(self.log, sys.stdout)
         sys.stderr = OutLog(self.log, sys.stderr, QColor(255, 0, 0))
-        formatter = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        formatter = '%(asctime)s - %(name)s:%(lineno)d (%(funcName)s) - %(levelname)s - %(message)s'
         logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
 
     def browse_file(
