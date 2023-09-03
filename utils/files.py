@@ -2,6 +2,7 @@
 import logging
 import os
 from pathlib import Path
+from typing import Sequence
 
 from constants import tales
 from exceptions.files import (
@@ -87,10 +88,14 @@ def rename_unknown_files_ext(dir_path: str):
                 "file_path": file_path,
                 "extension": extension,
             })
-            file_path.rename(file_path.with_suffix(extension))
+
+            # TODO: VT-11 Find older Vesperia data and see if 'name=' exists for TXV filenames...
+            sanitize_filename = file_path.name.replace("name=", "")
+            sanitize_file_path = file_path.parent / sanitize_filename
+            file_path.rename(sanitize_file_path.with_suffix(extension))
 
 
-def cleanup_leftover_files(dir_path, cleanup_files):
+def cleanup_leftover_files(dir_path: str, cleanup_files: Sequence[str]):
     """Cleanup leftover files after decompression
 
     Parameters
@@ -114,6 +119,7 @@ def cleanup_leftover_files(dir_path, cleanup_files):
                 "file_path": file_path,
             })
             os.remove(file_path)
+
     logger.info({
         "msg": "Done cleanup leftover cleanup_files",
         "cleanup_files": removed_files,
