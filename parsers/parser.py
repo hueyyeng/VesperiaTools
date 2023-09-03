@@ -6,42 +6,24 @@ import re
 import struct
 import zlib
 from pathlib import Path
+from typing import List
 
-from constants.tales import (
-    DDS_HEADER,
-    TYPE_2_EXT_PC,
+from constants.tales import DDS_HEADER, TYPE_2_EXT_PC
+from exceptions.files import InvalidFourCCException
+from parsers.models import (
+    Mesh,
+    Node,
+    Package,
+    TImage,
+    TNodeData
 )
-from exceptions.files import (
-    InvalidFourCCException,
-)
-from parsers.models import Mesh, Package
 from utils.binaries import BinaryReader
 from utils.files import (
     check_fourcc,
-    rename_unknown_files_ext,
+    rename_unknown_files_ext
 )
 
 logger = logging.getLogger(__name__)
-
-
-class Node:
-    """Node for object parsing and general data structures.
-
-    Contains attributes needed for exporting to external format (e.g. Wavefront OBJ)
-
-    This also hold pointers of the data element that we want to store when
-    parsing an object such as found meshes and materials.
-
-    Notes
-    -----
-    - Based on Szkaradek123's Python 2 script for Blender 2.49.
-
-    """
-    def __init__(self):
-        self.name = "NONAME"
-        self.children = []
-        self.data = {}
-        self.offset = None
 
 
 def debug_mesh(
@@ -674,14 +656,15 @@ def parse_textures(
             txv_content = f.read()
     except FileNotFoundError:
         raise Exception(f"{txv_file} not found! Make sure it is in the same directory")
+
     dds_offset = list(find_substring_offset(txv_content, DDS_HEADER))
-    dds_size = dds_offset[1]-dds_offset[0]
+    dds_size = dds_offset[1] - dds_offset[0]
     logger.debug({
         "dds_offset": dds_offset,
         "dds_size": dds_size,
     })
 
-    image_list = []
+    image_list: List[TImage] = []
     for i, m in enumerate(range(A[6])):
         logger.debug("%s>" % ('=' * 200))
         B = g.i(7)
@@ -702,7 +685,7 @@ def parse_textures(
             "texture_name": texture_name,
         })
 
-        image_data = {
+        image_data: TImage = {
             "texture_name": texture_name,
             "dds_content": txv_content[dds_offset[i]:dds_offset[i] + dds_size - 4],
         }
@@ -927,47 +910,49 @@ def parse_dec_ext(
 def get_package_names(
         file_path: Path,
         generic_pattern=False,
-):
+) -> List[Package]:
     """Get package names
 
     Parameters
     ----------
     file_path : Path
+        DEC file path (e.g. 'path/to/PACKAGE.DAT.dec')
     generic_pattern : bool
         Use generic regex pattern for package name. Default False.
 
     Returns
     -------
-    list
+    List[Package]
         List of found package names matching the regex pattern
 
     """
     asset_name = file_path.name.split(".")[0]
-    asset_name_underscore = "_".join([asset_name[:3], asset_name[3:]])
-    if "_" in asset_name:
-        asset_name_split = asset_name.split("_")
-        if len(asset_name_split) > 4:
-            asset_name_underscore = "_".join([
-                asset_name_split[1][-3:],
-                asset_name_split[2],
-                asset_name_split[3],
-            ])
-        if 2 < len(asset_name_split) <= 4:
-            asset_name_underscore = "_".join([
-                asset_name_split[0][-3:],
-                asset_name_split[1],
-                asset_name_split[2],
-            ])
-        if len(asset_name_split) == 2:
-            asset_name_underscore = "_".join([
-                f"{asset_name_split[0][:3]}_{asset_name_split[0][3:]}",
-                asset_name_split[1],
-            ])
-        logger.debug({
-            "msg": "Split Asset Name",
-            "asset_name_split": asset_name_split,
-            "asset_name_underscore": asset_name_underscore,
-        })
+    asset_name_underscore = asset_name
+    # asset_name_underscore = "_".join([asset_name[:3], asset_name[3:]])
+    # if "_" in asset_name:
+    #     asset_name_split = asset_name.split("_")
+    #     if len(asset_name_split) > 4:
+    #         asset_name_underscore = "_".join([
+    #             asset_name_split[1][-3:],
+    #             asset_name_split[2],
+    #             asset_name_split[3],
+    #         ])
+    #     if 2 < len(asset_name_split) <= 4:
+    #         asset_name_underscore = "_".join([
+    #             asset_name_split[0][-3:],
+    #             asset_name_split[1],
+    #             asset_name_split[2],
+    #         ])
+    #     if len(asset_name_split) == 2:
+    #         asset_name_underscore = "_".join([
+    #             f"{asset_name_split[0][:3]}_{asset_name_split[0][3:]}",
+    #             asset_name_split[1],
+    #         ])
+    #     logger.debug({
+    #         "msg": "Split Asset Name",
+    #         "asset_name_split": asset_name_split,
+    #         "asset_name_underscore": asset_name_underscore,
+    #     })
 
     with file_path.open("rb") as f:
         data = f.read()
@@ -1044,17 +1029,24 @@ def parse_dec(
     dec_ext_path = Path(f"{dec_path}.ext")
     dec_ext_path.mkdir(exist_ok=True)
 
-    if len(package_names) < len(node.data.keys()):
+    package_names_total = len(package_names)
+    data_keys_total = len(node.data.keys())
+    if package_names_total < data_keys_total:
+        logger.warning(f"Recursive package names! {package_names_total=}, {data_keys_total=}")
         package_names = get_package_names(
             dec_path,
             generic_pattern=True,
-        )[:len(node.data.keys())]
+        )[:data_keys_total]
 
     verify_fourcc = True
     for idx, (k, v) in enumerate(node.data.items()):
+        idx: int
+        k: str
+        v: TNodeData
+
         old_name = k
 
-        if len(package_names) == len(node.data.keys()):
+        if package_names_total == data_keys_total:
             k = package_names[idx].name
             verify_fourcc = False
 
@@ -1068,8 +1060,10 @@ def parse_dec(
                 input_file[0],
                 input_file[1],
             ])
+
         if verify_fourcc and fourcc in TYPE_2_EXT_PC.keys():
             k = f"{basename}{TYPE_2_EXT_PC[fourcc]}"
+
         if DDS_HEADER.hex() in fourcc_dds:
             k = f"{basename}.TXV"
 
