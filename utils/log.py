@@ -1,16 +1,14 @@
-from PySide2 import (
-    QtWidgets,
-    QtGui,
-)
+from PySide6.QtGui import QTextCursor
+from PySide6.QtWidgets import QTextEdit
 
 
 class OutLog():
-    def __init__(self, edit: QtWidgets.QTextEdit, out=None, color=None):
+    def __init__(self, edit: QTextEdit, out=None, color=None):
         """Redirect stdout to QTextEdit widget.
 
         Parameters
         ----------
-        edit : QtWidgets.QTextEdit
+        edit : QTextEdit
             QTextEdit object.
         out : object or None
             Alternate stream (can be the original sys.stdout).
@@ -34,16 +32,18 @@ class OutLog():
         if self.color:
             text_color = self.edit.textColor()
             self.edit.setTextColor(text_color)
+
         if self.out:
             self.out.write(text)
-        self.edit.moveCursor(QtGui.QTextCursor.End)
+
+        self.edit.moveCursor(QTextCursor.End)
         self.edit.insertPlainText(text)
 
     def flush(self):
         """Flush Outlog when process terminates.
 
         This prevent Exit Code 120 from happening so the process
-        can finished with Exit Code 0.
+        can be finished with Exit Code 0.
 
         """
         self.out.flush()

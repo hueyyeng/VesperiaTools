@@ -3,9 +3,10 @@ import os
 import sys
 from functools import partial
 
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
+from comel.wrapper import ComelMainWindowWrapper
 
 from constants.path import CONFIG_JSON
 from constants.ui import DOUBLE_LINEBREAKS, GITHUB_REPO_URL
@@ -38,11 +39,45 @@ from viewer.obj_viewer import show_viewer
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+APP_NAME = "VesperiaTools"
+APP_VERSION = "2023.10.22"
 
-class MainWindow(QWidget):
+
+class Application(QApplication):
     def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
-        self.build_ui()
+        super().__init__(*args, **kwargs)
+        self.setApplicationName(APP_NAME)
+        self.setApplicationDisplayName(APP_NAME)
+        self.setApplicationVersion(APP_VERSION)
+
+        self.setWindowIcon(QIcon("icon.png"))
+
+        self.main_window = MainWindow()
+        self.main_window.show()
+
+    def notify(self, receiver: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Type.KeyPress:
+            key_event = QKeyEvent(event)
+            if key_event.key() == Qt.Key.Key_F2 and self.main_window:
+                self.main_window.toggle_theme()
+                return True
+
+        if isinstance(receiver, QWidgetItem):
+            return False
+
+        return super().notify(receiver, event)
+
+
+class MainWindow(ComelMainWindowWrapper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setWindowTitle("VesperiaTools")
+        self.setGeometry(300, 300, 640, 500)
+        self.main_layout = QVBoxLayout()
+        w = QWidget(self)
+        w.setLayout(self.main_layout)
+        self.setCentralWidget(w)
+
         self.build_ui_txm_txv_path()
         self.build_ui_extract_textures()
         self.build_ui_dat_path()
@@ -63,13 +98,6 @@ class MainWindow(QWidget):
         self.build_ui_repo_url()
         self.populate_lineedit_path()
         self.set_logging()
-
-    def build_ui(self):
-        self.setWindowIcon(QIcon("icon.png"))
-        self.setWindowTitle("VesperiaTools")
-        self.setGeometry(300, 300, 640, 500)
-        self.main_layout = QVBoxLayout()
-        self.setLayout(self.main_layout)
 
     def build_ui_txm_txv_path(self):
         self.txm_txv_layout = QHBoxLayout()
@@ -474,11 +502,9 @@ class MainWindow(QWidget):
 
 
 def main():
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
+    app = Application([])
+    sys.exit(app.exec())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
