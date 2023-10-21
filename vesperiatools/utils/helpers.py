@@ -1,7 +1,7 @@
 import json
 import os
 
-from constants.path import CONFIG_JSON
+from vesperiatools.constants.path import CONFIG_JSON
 
 
 def create_config_json():

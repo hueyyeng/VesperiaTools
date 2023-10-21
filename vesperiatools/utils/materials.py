@@ -2,7 +2,7 @@
 import logging
 import os
 
-from parsers.models import Node
+from vesperiatools.parsers.models import Node
 
 logger = logging.getLogger(__name__)
 

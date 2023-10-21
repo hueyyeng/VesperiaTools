@@ -1,15 +1,15 @@
-from PySide6.QtGui import QTextCursor
-from PySide6.QtWidgets import QTextEdit
+from PySide6.QtGui import QTextCursor, QColor
+from PySide6.QtWidgets import QTextEdit, QPlainTextEdit
 
 
 class OutLog():
-    def __init__(self, edit: QTextEdit, out=None, color=None):
+    def __init__(self, edit: QTextEdit | QPlainTextEdit, out=None, color: QColor = None):
         """Redirect stdout to QTextEdit widget.
 
         Parameters
         ----------
-        edit : QTextEdit
-            QTextEdit object.
+        edit : QTextEdit | QPlainTextEdit
+            The text widget.
         out : object or None
             Alternate stream (can be the original sys.stdout).
         color : QtGui.QColor or None

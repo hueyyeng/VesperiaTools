@@ -8,19 +8,24 @@ import zlib
 from pathlib import Path
 from typing import List
 
-from constants.tales import DDS_HEADER, TYPE_2_EXT_PC
-from exceptions.files import InvalidFourCCException
-from parsers.models import (
+from vesperiatools.constants.tales import (
+    DDS_HEADER,
+    TYPE_2_EXT_PC,
+)
+from vesperiatools.exceptions.files import (
+    InvalidFourCCException,
+)
+from vesperiatools.parsers.models import (
     Mesh,
     Node,
     Package,
     TImage,
-    TNodeData
+    TNodeData,
 )
-from utils.binaries import BinaryReader
-from utils.files import (
+from vesperiatools.utils.binaries import BinaryReader
+from vesperiatools.utils.files import (
     check_fourcc,
-    rename_unknown_files_ext
+    rename_unknown_files_ext,
 )
 
 logger = logging.getLogger(__name__)
