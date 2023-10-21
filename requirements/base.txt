@@ -1,4 +1,5 @@
-PySide2==5.15.2
+PySide2>=5.15.2
 pyglet==1.5.15
 pyrender==0.1.45
 trimesh==3.9.10
+typing-extensions>=4.8.0

@@ -2,7 +2,7 @@
 import logging
 from pathlib import Path
 
-from parsers.parser import Node
+from parsers.models import Node
 
 logger = logging.getLogger(__name__)
 

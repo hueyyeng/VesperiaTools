@@ -3,7 +3,7 @@ import logging
 import os
 import re
 
-from parsers.parser import Node
+from parsers.models import Node
 
 logger = logging.getLogger(__name__)
 

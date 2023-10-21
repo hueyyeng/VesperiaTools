@@ -1,5 +1,10 @@
 """Object models for data extraction."""
+from __future__ import annotations
+
 from dataclasses import dataclass
+from typing import Dict, List
+
+from typing_extensions import NotRequired, TypedDict
 
 
 @dataclass
@@ -99,3 +104,54 @@ class Mesh:
                     })
                     self.matIDList.append(matID)
                 clockwise = not clockwise
+
+
+class TMaterial(TypedDict):
+    mtl: str
+    tex: List[str]
+
+
+class TImage(TypedDict):
+    texture_name: str
+    dds_content: bytes
+
+
+class TNodeData(TypedDict):
+    name: str
+    offset_start: int
+    offset_end: int
+    hash_list: NotRequired[List[int]]
+    mesh_list: NotRequired[List[Mesh]]
+    material_list: NotRequired[List[List[TMaterial]]]
+    image_list: NotRequired[List[TImage]]
+
+
+class Node:
+    """Node for object parsing and general data structures.
+
+    Contains attributes needed for exporting to external format (e.g. Wavefront OBJ)
+
+    This also hold pointers of the data element that we want to store when
+    parsing an object such as found meshes and materials.
+
+    Notes
+    -----
+    - Based on Szkaradek123's Python 2 script for Blender 2.49.
+
+    """
+    def __init__(self):
+        self.name = "NONAME"
+        self.children = []
+        data: TNodeData = {
+            "name": "",
+            "offset_start": 0,
+            "offset_end": 0,
+            "hash_list": [],
+            "mesh_list": [],
+            "material_list": [],
+            "image_list": [],
+        }
+        self.data: Dict[str, TNodeData] = {
+            "_": data,
+        }
+        self.offset = None

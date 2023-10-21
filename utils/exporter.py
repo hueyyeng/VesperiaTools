@@ -4,12 +4,12 @@ import logging
 import os
 
 from parsers.parser import (
-    Node,
     debug_mesh,
     parse_mesh,
     parse_material,
     parse_textures,
 )
+from parsers.models import Node
 from utils.materials import write_to_mtl
 from utils.meshes import (
     face_creation,
