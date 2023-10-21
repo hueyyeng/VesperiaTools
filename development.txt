@@ -1,0 +1,3 @@
+-r requirements.txt
+isort>=5.12.0
+ipython>=8.16.0
