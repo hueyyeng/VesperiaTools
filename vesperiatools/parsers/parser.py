@@ -20,7 +20,7 @@ from vesperiatools.parsers.models import (
     Node,
     Package,
     TImage,
-    TNodeData,
+    TPackageData,
 )
 from vesperiatools.utils.binaries import BinaryReader
 from vesperiatools.utils.files import (
@@ -43,13 +43,18 @@ def debug_mesh(
     """
     if not node.data:
         raise Exception("No meshes found!")
+
     logger.debug("%s>" % ('=' * 200))
     logger.debug({
         "hash_list": node.data['hash_list'],  # Important? Probably not for static mesh
     })
+
     mesh_lists = node.data["mesh_list"]
     for idx, mesh_list in enumerate(mesh_lists):
+        idx: int
+        mesh_list: list[Mesh]
         logger.debug("Total meshes for Loop %s : %s" % (idx, len(mesh_list)))
+
         for mesh in mesh_list:
             logger.debug({
                 "MeshName": mesh.name,
@@ -66,7 +71,7 @@ def debug_mesh(
 
 
 def get_vertex_data(
-        mesh: object,
+        mesh: Mesh,
         g: BinaryReader,
         v1: int,
         v2: int,
@@ -78,7 +83,7 @@ def get_vertex_data(
 
     Parameters
     ----------
-    mesh : object
+    mesh : Mesh
     g : BinaryReader
     v1 : int
     v2 : int
@@ -576,10 +581,6 @@ def find_substring_offset(
     substring : bytes
         Must be bytes str. The substring value.
 
-    Returns
-    -------
-    str
-
     """
     start = 0
     while True:
@@ -666,9 +667,13 @@ def parse_textures(
             "texture_name": texture_name,
         })
 
+        offset_begin: int = dds_offset[i]
+        offset_end: int = dds_offset[i] + dds_size - 4
+        dds_content: bytes = txv_content[offset_begin:offset_end]
+
         image_data: TImage = {
             "texture_name": texture_name,
-            "dds_content": txv_content[dds_offset[i]:dds_offset[i] + dds_size - 4],
+            "dds_content": dds_content,
         }
 
         image_list.append(image_data)
@@ -812,6 +817,8 @@ def parse_fps4(
         B.append(g.i(A[3] // 4))
 
     for idx, b in enumerate(B):
+        idx: int
+        b: list[int]
         logger.debug({
             "msg": f"Loop B - {idx:04}",
         })
@@ -830,7 +837,7 @@ def parse_fps4(
                 "size": b[1],
                 "n": n,
             })
-            node.data[f"{idx:04}"] = {
+            node.packages[f"{idx:04}"] = {
                 "name": name,
                 "offset_start": b[0],
                 "offset_end": b[0] + b[1],
@@ -869,7 +876,7 @@ def parse_dec_ext(
         dec_ext_content = dec_ext_file.read()
 
     dec_ext_ext_path = Path(f"{dec_ext_path}.ext")
-    for k, v in node.data.items():
+    for k, v in node.packages.items():
         name_ = v["name"]
         unknown_file_path = dec_ext_ext_path / f"{name_}.{k}"
         unknown_file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -951,11 +958,14 @@ def get_package_names(
         match = pattern.search(data[current_offset:])
         if match is None:
             break
+
         package = Package()
         package.name = match.group(0).decode()
         package.offset = current_offset
         package_names.append(package)
         current_offset += match.end()
+
+        logger.debug("Found package name: %s" % package.name)
 
     return package_names
 
@@ -1002,7 +1012,7 @@ def parse_dec(
     dec_ext_path.mkdir(exist_ok=True)
 
     package_names_total = len(package_names)
-    data_keys_total = len(node.data.keys())
+    data_keys_total = len(node.packages.keys())
     if package_names_total < data_keys_total:
         logger.warning(f"Recursive package names! {package_names_total=}, {data_keys_total=}")
         package_names = get_package_names(
@@ -1011,13 +1021,12 @@ def parse_dec(
         )[:data_keys_total]
 
     verify_fourcc = True
-    for idx, (k, v) in enumerate(node.data.items()):
+    for idx, (k, v) in enumerate(node.packages.items()):
         idx: int
         k: str
-        v: TNodeData
+        v: TPackageData
 
         old_name = k
-
         if old_name == "_":
             # Skip as possible redundant bytes padding
             continue
@@ -1026,13 +1035,14 @@ def parse_dec(
             k = package_names[idx].name
             verify_fourcc = False
 
-        fourcc = dec_content[v["offset_start"]:v["offset_start"]+4].hex().upper()
-        fourcc_dds = dec_content[v["offset_start"]:v["offset_start"]+8].hex().upper()
+        offset_start = v["offset_start"]
+        fourcc = dec_content[offset_start:offset_start + 4].hex().upper()
+        fourcc_dds = dec_content[offset_start:offset_start + 8].hex().upper()
         basename = k.split('.')[0]
 
         if is_tex_package:
             input_file = dec_path.name.split('.')
-            k = '.'.join([
+            k = ".".join([
                 input_file[0],
                 input_file[1],
             ])
@@ -1044,7 +1054,7 @@ def parse_dec(
             k = f"{basename}.TXV"
 
         new_name = k
-        logger.debug({
+        logger.info({
             "msg": "filename",
             "old_name": old_name,
             "new_name": new_name,

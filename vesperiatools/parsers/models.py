@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import List
 
-from typing_extensions import NotRequired, TypedDict
+from typing_extensions import TypedDict
 
 
 @dataclass
@@ -116,14 +116,20 @@ class TImage(TypedDict):
     dds_content: bytes
 
 
+class TPackageData(TypedDict):
+    name: str | None
+    offset_start: int
+    offset_end: int
+
+
 class TNodeData(TypedDict):
     name: str
     offset_start: int
     offset_end: int
-    hash_list: NotRequired[List[int]]
-    mesh_list: NotRequired[List[Mesh]]
-    material_list: NotRequired[List[List[TMaterial]]]
-    image_list: NotRequired[List[TImage]]
+    hash_list: List[int]
+    mesh_list: List[List[Mesh]]
+    material_list: List[List[TMaterial]]
+    image_list: List[TImage]
 
 
 class Node:
@@ -142,7 +148,7 @@ class Node:
     def __init__(self):
         self.name = "NONAME"
         self.children = []
-        data: TNodeData = {
+        self.data: TNodeData = {
             "name": "",
             "offset_start": 0,
             "offset_end": 0,
@@ -151,7 +157,5 @@ class Node:
             "material_list": [],
             "image_list": [],
         }
-        self.data: Dict[str, TNodeData] = {
-            "_": data,
-        }
+        self.packages: dict[str, TPackageData] = {}
         self.offset = None
