@@ -9,7 +9,10 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 from vesperiatools.constants.path import CONFIG_JSON
-from vesperiatools.constants.ui import DOUBLE_LINEBREAKS, GITHUB_REPO_URL
+from vesperiatools.constants.ui import (
+    DOUBLE_LINEBREAKS,
+    GITHUB_REPO_URL,
+)
 from vesperiatools.parsers.parser import (
     parse_dat,
     parse_dec,
@@ -34,6 +37,9 @@ from vesperiatools.utils.helpers import (
     set_txm_txm_path,
 )
 from vesperiatools.utils.log import OutLog
+from vesperiatools.vesperiatools_qt.main_window.menus import (
+    MainMenuBar,
+)
 from vesperiatools.viewer.obj_viewer import show_viewer
 
 
@@ -46,6 +52,9 @@ class MainWindow(ComelMainWindowWrapper):
         w = QWidget(self)
         w.setLayout(self.main_layout)
         self.setCentralWidget(w)
+
+        self.menu_bar = MainMenuBar(self)
+        self.setMenuBar(self.menu_bar)
 
         self.build_ui_txm_txv_path()
         self.build_ui_extract_textures()
@@ -318,11 +327,19 @@ class MainWindow(ComelMainWindowWrapper):
         else:
             create_config_json()
 
-    def set_logging(self):
+    def set_logging(self, level=logging.INFO):
         sys.stdout = OutLog(self.log, sys.stdout)
         sys.stderr = OutLog(self.log, sys.stderr, QColor(255, 0, 0))
         formatter = "[%(levelname)s] %(asctime)s %(filename)s:%(lineno)d - %(funcName)s - %(message)s"
-        logging.basicConfig(stream=sys.stdout, level=logging.INFO, format=formatter)
+        logging.basicConfig(
+            stream=sys.stdout,
+            level=level,
+            format=formatter,
+        )
+
+    @staticmethod
+    def set_log_level(level: int):
+        logging.getLogger().setLevel(level)
 
     def browse_file(
             self,
