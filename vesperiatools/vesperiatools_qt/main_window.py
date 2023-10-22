@@ -321,8 +321,8 @@ class MainWindow(ComelMainWindowWrapper):
     def set_logging(self):
         sys.stdout = OutLog(self.log, sys.stdout)
         sys.stderr = OutLog(self.log, sys.stderr, QColor(255, 0, 0))
-        formatter = '%(asctime)s - %(name)s:%(lineno)d (%(funcName)s) - %(levelname)s - %(message)s'
-        logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=formatter)
+        formatter = "[%(levelname)s] %(asctime)s %(filename)s:%(lineno)d - %(funcName)s - %(message)s"
+        logging.basicConfig(stream=sys.stdout, level=logging.INFO, format=formatter)
 
     def browse_file(
             self,
