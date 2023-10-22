@@ -65,10 +65,9 @@ def export_wavefront_mtl(
         input_path: str,
         output_path: str,
         node: Node = None,
-        verbose=False,
 ):
     node = Node() if node is None else node
-    parse_material(input_path, node, verbose=False)
+    parse_material(input_path, node)
     write_to_mtl(node, output_path)
 
 
@@ -146,7 +145,6 @@ def export_wavefront_obj(
         input_path: str,
         output_path: str,
         node: Node = None,
-        verbose=False,
 ):
     """Export parsed meshes as Wavefront OBJ files.
 
@@ -158,15 +156,12 @@ def export_wavefront_obj(
         Path to exported OBJ files.
     node : Node or None
         Node object. Default None.
-    verbose : bool
-        Set True for verbose debug mesh output. Default False.
 
     """
     node = Node() if node is None else node
-    parse_mesh(input_path, node, verbose=False)
-    face_creation(node, verbose=False)
-    if verbose:
-        debug_mesh(node)
+    parse_mesh(input_path, node)
+    face_creation(node)
+    debug_mesh(node)
     exported_obj_path = write_to_obj(node, output_path=output_path)
     logger.debug({
         "msg": "Successfully export Wavefront OBJs",
@@ -184,8 +179,7 @@ def export_dds_textures(
         input_path: str,
         output_path: str,
         node: Node = None,
-        verbose=False,
 ):
     node = Node() if node is None else node
-    parse_textures(input_path, node, verbose=False)
+    parse_textures(input_path, node)
     write_to_dds(node, output_path)

@@ -33,15 +33,12 @@ logger = logging.getLogger(__name__)
 
 def debug_mesh(
         node: Node,
-        verbose=False
 ):
     """Debug found mesh from SPM package.
 
     Parameters
     ----------
     node : Node
-    verbose : bool
-        Toggle verbose level for individual indices
 
     """
     if not node.data:
@@ -64,9 +61,8 @@ def debug_mesh(
                 "matIDList": len(mesh.matIDList),
                 "matList": len(mesh.matList),
             })
-            if verbose:
-                for face_idx, indice in enumerate(mesh.indiceList):
-                    logger.debug("indice %03d : %s" % (face_idx, indice))
+            for face_idx, indice in enumerate(mesh.indiceList):
+                logger.debug("indice %03d : %s" % (face_idx, indice))
 
 
 def get_vertex_data(
@@ -77,7 +73,6 @@ def get_vertex_data(
         v3: int,
         v4: int,
         n: int,
-        verbose=False,
 ):
     """Get vertex data for skinned mesh.
 
@@ -90,7 +85,6 @@ def get_vertex_data(
     v3 : int
     v4 : int
     n : int
-    verbose : bool
 
     Notes
     -----
@@ -102,11 +96,10 @@ def get_vertex_data(
         mesh.vertPosList.append(g.f(3))
         mesh.vertNormList.append(g.f(3))
         indice_offset = g.tell()
-        if verbose:
-            logger.debug({
-                "v1 v_offset": v_offset,
-                "v1 indice_offset": indice_offset,
-            })
+        logger.debug({
+            "v1 v_offset": v_offset,
+            "v1 indice_offset": indice_offset,
+        })
         mesh.skinIndiceList.append(g.B(4))
         mesh.skinWeightList.append([0, 0, 0, 1])
 
@@ -115,11 +108,10 @@ def get_vertex_data(
         mesh.vertPosList.append(g.f(3))
         mesh.vertNormList.append(g.f(3))
         indice_offset = g.tell()
-        if verbose:
-            logger.debug({
-                "v2 v_offset": v_offset,
-                "v2 indice_offset": indice_offset,
-            })
+        logger.debug({
+            "v2 v_offset": v_offset,
+            "v2 indice_offset": indice_offset,
+        })
         mesh.skinIndiceList.append(g.B(4))
         w1 = g.f(1)[0]
         w2 = 1.0 - w1
@@ -130,11 +122,10 @@ def get_vertex_data(
         mesh.vertPosList.append(g.f(3))
         mesh.vertNormList.append(g.f(3))
         indice_offset = g.tell()
-        if verbose:
-            logger.debug({
-                "v3 v_offset": v_offset,
-                "v3 indice_offset": indice_offset,
-            })
+        logger.debug({
+            "v3 v_offset": v_offset,
+            "v3 indice_offset": indice_offset,
+        })
         mesh.skinIndiceList.append(g.B(4))
         w1 = g.f(1)[0]
         w2 = g.f(1)[0]
@@ -146,11 +137,10 @@ def get_vertex_data(
         mesh.vertPosList.append(g.f(3))
         mesh.vertNormList.append(g.f(3))
         indice_offset = g.tell()
-        if verbose:
-            logger.debug({
-                "v4 v_offset": v_offset,
-                "v4 indice_offset": indice_offset,
-            })
+        logger.debug({
+            "v4 v_offset": v_offset,
+            "v4 indice_offset": indice_offset,
+        })
         mesh.skinIndiceList.append(g.B(4))
         w1 = g.f(1)[0]
         w2 = g.f(1)[0]
@@ -162,7 +152,6 @@ def get_vertex_data(
 def parse_uv(
         file_path: str,
         node: Node,
-        verbose=False,
 ):
     """Parse UV coordinates value.
 
@@ -171,8 +160,6 @@ def parse_uv(
     file_path : str
         Path to SPV file (e.g. 'path/to/PACKAGE.SPV')
     node : Node
-    verbose : bool
-        Display mesh's UV values. Default False.
 
     Notes
     -----
@@ -191,10 +178,9 @@ def parse_uv(
     for meshes in node.data["mesh_list"]:
         for mesh in meshes:
             unpack_error = False
-            if verbose:
-                logger.debug({
-                    "Mesh UV:": mesh.name
-                })
+            logger.debug({
+                "Mesh UV:": mesh.name
+            })
             for m in range(mesh.vertUVCount):
                 offset = g.tell()
                 try:
@@ -205,11 +191,10 @@ def parse_uv(
                 offset_diff = g.tell() - offset
                 u = 0.0 if math.isnan(f[1]) else f[1]
                 v = 0.0 if math.isnan(f[2]) else f[2]
-                if verbose:
-                    logger.debug({
-                        "UV": "%f, %f" % (u, v),
-                        "offset": g.tell(),
-                    })
+                logger.debug({
+                    "UV": "%f, %f" % (u, v),
+                    "offset": g.tell(),
+                })
                 mesh.vertUVList.append([u, 1.0 - v])  # Fix UV?
                 # mesh.vertUVList.append([u, v])  # Fix UV?
             if unpack_error:
@@ -221,7 +206,6 @@ def parse_uv(
 def parse_mesh(
         file_path: str,
         node: Node,
-        verbose=False,
 ):
     """Parse mesh data from SPM (and SPV) package.
 
@@ -232,8 +216,6 @@ def parse_mesh(
     file_path : str
         Path to SPM file (e.g. 'path/to/PACKAGE.SPM')
     node : Node
-    verbose : bool
-        Display verbose output of mesh parsing. Default False
 
     Notes
     -----
@@ -393,11 +375,10 @@ def parse_mesh(
                 # Vertex Position
                 v_offset = g.tell()
                 vertex = g.f(3)
-                if verbose:
-                    logger.debug({
-                        "v": vertex,
-                        "v_offset": v_offset,
-                    })
+                logger.debug({
+                    "v": vertex,
+                    "v_offset": v_offset,
+                })
                 total_v.append(vertex)
                 mesh.vertPosList.append(vertex)
 
@@ -407,11 +388,10 @@ def parse_mesh(
                     vn_offset = v_offset + 888
                 g.seek(vn_offset)
                 vertex_normal = g.f(3)
-                if verbose:
-                    logger.debug({
-                        "vn": vertex_normal,
-                        "vn_offset": vn_offset,
-                    })
+                logger.debug({
+                    "vn": vertex_normal,
+                    "vn_offset": vn_offset,
+                })
                 total_vn.append(vertex_normal)
                 mesh.vertNormList.append(vertex_normal)
                 g.seek(v_offset + 12)
@@ -448,7 +428,7 @@ def parse_mesh(
                 "v3": v3,
                 "v4": v4,
             })
-            get_vertex_data(mesh, g, v1, v2, v3, v4, n, verbose)
+            get_vertex_data(mesh, g, v1, v2, v3, v4, n)
             mesh_range = unkCount - 1
             logger.debug("mesh_range: %s" % mesh_range)
             for x in range(mesh_range):
@@ -465,7 +445,7 @@ def parse_mesh(
                     "v3": v3,
                     "v4": v4,
                 })
-                get_vertex_data(mesh, g, v1, v2, v3, v4, n, verbose)
+                get_vertex_data(mesh, g, v1, v2, v3, v4, n)
 
         else:
             logger.warning({
@@ -485,14 +465,13 @@ def parse_mesh(
     logger.debug({
         "spv_file": spv_file,
     })
-    parse_uv(spv_file, node, verbose=verbose)
+    parse_uv(spv_file, node)
     g.close()
 
 
 def parse_material(
         file_path: str,
         node: Node,
-        verbose=False,
 ):
     """Parse material from MTR package.
 
@@ -501,7 +480,6 @@ def parse_material(
     file_path : str
         Path to DAT file (e.g. 'path/to/PACKAGE.MTR')
     node : Node
-    verbose : bool
 
     Notes
     -----
@@ -616,7 +594,6 @@ def find_substring_offset(
 def parse_textures(
         file_path: str,
         node: Node,
-        verbose=False,
 ):
     """Parse textures from TXM (and TXV) package.
 
@@ -626,7 +603,6 @@ def parse_textures(
     ----------
     file_path : str
     node : Node
-    verbose : bool
 
     Notes
     -----
@@ -709,7 +685,6 @@ def parse_textures(
 
 def parse_svo(
         svo_path: str,
-        verbose=False,
 ):
     """Parse SVO package
 
@@ -717,7 +692,6 @@ def parse_svo(
     ----------
     svo_path : str
         Path to SVO file (e.g. 'path/to/PACKAGE.SVO')
-    verbose : bool
 
     Notes
     -----
@@ -768,7 +742,6 @@ def parse_svo(
 
 def parse_dat(
         dat_path: str,
-        verbose=False,
 ):
     """Parse DAT file from SVO package
 
@@ -776,7 +749,6 @@ def parse_dat(
     ----------
     dat_path : str
         Path to DAT file (e.g. 'path/to/PACKAGE.DAT')
-    verbose : bool
 
     Notes
     -----
@@ -804,7 +776,6 @@ def parse_fps4(
         g: BinaryReader,
         n: int,
         parent_node: Node,
-        verbose=False,
 ):
     """Parse FPS4 package
 
@@ -813,7 +784,6 @@ def parse_fps4(
     g : BinaryReader
     n : int
     parent_node : Node
-    verbose : bool
 
     Notes
     -----
@@ -871,7 +841,6 @@ def parse_fps4(
 
 def parse_dec_ext(
         dec_ext_path: str,
-        verbose=False,
 ):
     """Parse unknown extracted files from parsed DAT.dec
 
@@ -879,7 +848,6 @@ def parse_dec_ext(
     ----------
     dec_ext_path : str
         Path to unknown file (e.g. 'path/to/PACKAGE.DAT.dec.ext/0000')
-    verbose : bool
 
     Notes
     -----
@@ -994,7 +962,6 @@ def get_package_names(
 
 def parse_dec(
         dec_path: str,
-        verbose=False,
 ):
     """Parse DEC file from parsed DAT
 
@@ -1002,7 +969,6 @@ def parse_dec(
     ----------
     dec_path : str
         Path to DEC file (e.g. 'path/to/PACKAGE.DAT.dec')
-    verbose : bool
 
     Notes
     -----
