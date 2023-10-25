@@ -1,16 +1,18 @@
-from PySide6.QtGui import QTextCursor, QColor
-from PySide6.QtWidgets import QTextEdit, QPlainTextEdit
+from typing import TextIO
+
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QTextEdit
 
 
-class OutLog():
-    def __init__(self, edit: QTextEdit | QPlainTextEdit, out=None, color: QColor = None):
+class OutLog:
+    def __init__(self, edit: QTextEdit, out: TextIO, color: QColor = None):
         """Redirect stdout to QTextEdit widget.
 
         Parameters
         ----------
-        edit : QTextEdit | QPlainTextEdit
+        edit : QTextEdit
             The text widget.
-        out : object or None
+        out : TextIO
             Alternate stream (can be the original sys.stdout).
         color : QtGui.QColor or None
             QColor object (i.e. color stderr a different color).
@@ -29,15 +31,13 @@ class OutLog():
             Print values from stdout.
 
         """
+        text_color = self.edit.textColor()
         if self.color:
-            text_color = self.edit.textColor()
-            self.edit.setTextColor(text_color)
+            self.edit.setTextColor(self.color)
 
-        if self.out:
-            self.out.write(text)
-
-        self.edit.moveCursor(QTextCursor.End)
         self.edit.insertPlainText(text)
+        self.edit.setTextColor(text_color)
+        self.out.write(text)
 
     def flush(self):
         """Flush Outlog when process terminates.

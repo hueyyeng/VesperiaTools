@@ -300,9 +300,10 @@ class MainWindow(ComelMainWindowWrapper):
         self.main_layout.addLayout(self.obj_viewer_layout)
 
     def build_ui_log(self):
-        self.log_label = QLabel("Output log:")
+        self.log_label = QLabel("Output Log:")
         self.main_layout.addWidget(self.log_label)
-        self.log = QPlainTextEdit()
+        self.log = QTextEdit(self)
+        self.log.setReadOnly(True)
         self.main_layout.addWidget(self.log)
 
     def build_ui_repo_url(self):
