@@ -13,6 +13,7 @@ from vesperiatools.constants.ui import (
     DOUBLE_LINEBREAKS,
     GITHUB_REPO_URL,
 )
+from vesperiatools.enums import FileFormatFilterEnum as FFF
 from vesperiatools.parsers.parser import (
     parse_dat,
     parse_dec,
@@ -40,6 +41,11 @@ from vesperiatools.utils.log import OutLog
 from vesperiatools.vesperiatools_qt.main_window.menus import (
     MainMenuBar,
 )
+from vesperiatools.vesperiatools_qt.main_window.widgets import (
+    CentralWidget,
+    Sidebar,
+)
+from vesperiatools.vesperiatools_qt.utils import browse_file
 from vesperiatools.viewer.obj_viewer import show_viewer
 
 
@@ -49,9 +55,19 @@ class MainWindow(ComelMainWindowWrapper):
         self.setWindowTitle("VesperiaTools")
         self.setGeometry(300, 300, 640, 500)
         self.legacy_layout = QVBoxLayout()
-        w = QWidget(self)
-        w.setLayout(self.legacy_layout)
-        self.setCentralWidget(w)
+        legacy_widget = QWidget(self)
+        legacy_widget.setLayout(self.legacy_layout)
+
+        central_widget = CentralWidget(self)
+        self.setCentralWidget(central_widget)
+
+        self.sidebar = Sidebar(self)
+        unpack_dat_btn = QPushButton("Unpack DAT")
+        unpack_dat_btn.clicked.connect(self.unpack_dat)
+        self.sidebar.addWidget(unpack_dat_btn)
+
+        central_widget.addWidget(self.sidebar)
+        central_widget.addWidget(legacy_widget)
 
         self.menu_bar = MainMenuBar(self)
         self.setMenuBar(self.menu_bar)
@@ -78,6 +94,13 @@ class MainWindow(ComelMainWindowWrapper):
 
         self.populate_lineedit_path()
         self.set_logging()
+
+    def unpack_dat(self):
+        dat_file = browse_file(self, FFF.DAT)
+        if not dat_file:
+            return
+
+        print(dat_file)
 
     def build_ui_txm_txv_path(self):
         self.txm_txv_layout = QHBoxLayout()
