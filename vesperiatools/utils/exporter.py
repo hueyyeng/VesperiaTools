@@ -1,21 +1,21 @@
 """VesperiaTools Exporter."""
-from pathlib import Path
 import logging
 import os
+from pathlib import Path
 
-from parsers.parser import (
+from vesperiatools.parsers.models import Node
+from vesperiatools.parsers.parser import (
     debug_mesh,
-    parse_mesh,
     parse_material,
+    parse_mesh,
     parse_textures,
 )
-from parsers.models import Node
-from utils.materials import write_to_mtl
-from utils.meshes import (
+from vesperiatools.utils.materials import write_to_mtl
+from vesperiatools.utils.meshes import (
     face_creation,
     write_to_obj,
 )
-from utils.textures import write_to_dds
+from vesperiatools.utils.textures import write_to_dds
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +65,9 @@ def export_wavefront_mtl(
         input_path: str,
         output_path: str,
         node: Node = None,
-        verbose=False,
 ):
     node = Node() if node is None else node
-    parse_material(input_path, node, verbose=False)
+    parse_material(input_path, node)
     write_to_mtl(node, output_path)
 
 
@@ -146,7 +145,6 @@ def export_wavefront_obj(
         input_path: str,
         output_path: str,
         node: Node = None,
-        verbose=False,
 ):
     """Export parsed meshes as Wavefront OBJ files.
 
@@ -158,15 +156,12 @@ def export_wavefront_obj(
         Path to exported OBJ files.
     node : Node or None
         Node object. Default None.
-    verbose : bool
-        Set True for verbose debug mesh output. Default False.
 
     """
     node = Node() if node is None else node
-    parse_mesh(input_path, node, verbose=False)
-    face_creation(node, verbose=False)
-    if verbose:
-        debug_mesh(node)
+    parse_mesh(input_path, node)
+    face_creation(node)
+    debug_mesh(node)
     exported_obj_path = write_to_obj(node, output_path=output_path)
     logger.debug({
         "msg": "Successfully export Wavefront OBJs",
@@ -184,8 +179,7 @@ def export_dds_textures(
         input_path: str,
         output_path: str,
         node: Node = None,
-        verbose=False,
 ):
     node = Node() if node is None else node
-    parse_textures(input_path, node, verbose=False)
+    parse_textures(input_path, node)
     write_to_dds(node, output_path)

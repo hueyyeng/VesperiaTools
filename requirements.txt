@@ -1,0 +1,6 @@
+Comel>=0.1.6
+PySide6
+pyglet>=2.0.9
+pyrender==0.1.45
+trimesh>=4.0.0
+typing-extensions>=4.8.0

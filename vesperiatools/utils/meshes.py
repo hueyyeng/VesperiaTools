@@ -3,19 +3,17 @@ import logging
 import os
 import re
 
-from parsers.models import Node
+from vesperiatools.parsers.models import Node
 
 logger = logging.getLogger(__name__)
 
 
-def face_creation(node: Node, verbose=False):
+def face_creation(node: Node):
     """Create faces from decoded mesh attributes.
 
     Parameters
     ----------
     node : Node
-    verbose : bool
-        Display mesh's triangles values. Default False.
 
     Notes
     -----
@@ -33,12 +31,12 @@ def face_creation(node: Node, verbose=False):
                     "mesh.vertPosList": len(mesh.vertPosList),
                     "mesh.triangleList": len(mesh.triangleList)
                 })
-            if verbose:
-                for triangle_idx, triangle in enumerate(mesh.triangleList):
-                    logger.debug({
-                        "triangle_idx": triangle_idx,
-                        "triangle_value": triangle,
-                    })
+
+            for triangle_idx, triangle in enumerate(mesh.triangleList):
+                logger.debug({
+                    "triangle_idx": triangle_idx,
+                    "triangle_value": triangle,
+                })
 
 
 def round_float_value(value: float, decimal: int):

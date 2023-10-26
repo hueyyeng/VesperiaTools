@@ -4,14 +4,16 @@ import os
 from pathlib import Path
 from typing import Sequence
 
-from constants import tales
-from exceptions.files import (
+from vesperiatools.constants import tales
+from vesperiatools.exceptions.files import (
     InvalidFileException,
     InvalidFourCCException,
 )
 
 logger = logging.getLogger(__name__)
-log_handler = logging.FileHandler("vesperia_tools_debug.log")
+log_path = Path("logs")
+log_path.mkdir(exist_ok=True)
+log_handler = logging.FileHandler("logs/vesperia_tools.log")
 log_handler.setLevel(logging.DEBUG)
 logger.addHandler(log_handler)
 

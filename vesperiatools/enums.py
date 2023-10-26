@@ -1,0 +1,10 @@
+class FileFormatFilterEnum:
+    ALL = "All Files (*)"
+    DAT = "DAT Files (*.dat)"
+    DEC = "DEC Files (*.dec)"
+    MTR = "MTR Files (*.mtr)"
+    OBJ = "OBJ Files (*.obj)"
+    SPM_SPV = "SPM/SPV Files (*.spm *.spv)"
+    SVO = "SVO Files (*.svo)"
+    TXM_TXV = "TXM/TXV Files (*.txm *.txv)"
+    UNKNOWN = "DAT.dec.ext Unknown Files (0000 0001 0002 0003 *.FPS4)"

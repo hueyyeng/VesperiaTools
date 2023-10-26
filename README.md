@@ -32,7 +32,7 @@ steps below:
 ```bash
 python -m venv env
 source env/Scripts/activate
-pip install -r requirements/base.txt
+pip install -r requirements.txt
 python main.py
 ```
 
