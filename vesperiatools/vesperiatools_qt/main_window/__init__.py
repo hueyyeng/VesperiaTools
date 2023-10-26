@@ -48,14 +48,15 @@ class MainWindow(ComelMainWindowWrapper):
         super().__init__(*args, **kwargs)
         self.setWindowTitle("VesperiaTools")
         self.setGeometry(300, 300, 640, 500)
-        self.main_layout = QVBoxLayout()
+        self.legacy_layout = QVBoxLayout()
         w = QWidget(self)
-        w.setLayout(self.main_layout)
+        w.setLayout(self.legacy_layout)
         self.setCentralWidget(w)
 
         self.menu_bar = MainMenuBar(self)
         self.setMenuBar(self.menu_bar)
 
+        # TODO: Repurpose build_ui as dedicated widgets?
         self.build_ui_txm_txv_path()
         self.build_ui_extract_textures()
         self.build_ui_dat_path()
@@ -74,6 +75,7 @@ class MainWindow(ComelMainWindowWrapper):
         self.build_ui_obj_viewer()
         self.build_ui_log()
         self.build_ui_repo_url()
+
         self.populate_lineedit_path()
         self.set_logging()
 
@@ -100,7 +102,7 @@ class MainWindow(ComelMainWindowWrapper):
             )
         )
         self.txm_txv_layout.addWidget(self.txm_txv_browser_btn)
-        self.main_layout.addLayout(self.txm_txv_layout)
+        self.legacy_layout.addLayout(self.txm_txv_layout)
 
     def build_ui_extract_textures(self):
         self.extract_textures_layout = QHBoxLayout()
@@ -108,7 +110,7 @@ class MainWindow(ComelMainWindowWrapper):
         self.extract_textures_btn.clicked.connect(self.run_extract_textures)
         self.extract_textures_layout.addStretch(0)
         self.extract_textures_layout.addWidget(self.extract_textures_btn)
-        self.main_layout.addLayout(self.extract_textures_layout)
+        self.legacy_layout.addLayout(self.extract_textures_layout)
 
     def build_ui_dat_path(self):
         self.dat_path_layout = QHBoxLayout()
@@ -127,7 +129,7 @@ class MainWindow(ComelMainWindowWrapper):
             )
         )
         self.dat_path_layout.addWidget(self.dat_path_browse_btn)
-        self.main_layout.addLayout(self.dat_path_layout)
+        self.legacy_layout.addLayout(self.dat_path_layout)
 
     def build_ui_unpack_dat(self):
         self.unpack_dat_layout = QHBoxLayout()
@@ -135,7 +137,7 @@ class MainWindow(ComelMainWindowWrapper):
         self.unpack_dat_btn.clicked.connect(self.run_unpack_dat)
         self.unpack_dat_layout.addStretch(0)
         self.unpack_dat_layout.addWidget(self.unpack_dat_btn)
-        self.main_layout.addLayout(self.unpack_dat_layout)
+        self.legacy_layout.addLayout(self.unpack_dat_layout)
 
     def build_ui_dec_path(self):
         self.dec_path_layout = QHBoxLayout()
@@ -154,7 +156,7 @@ class MainWindow(ComelMainWindowWrapper):
             )
         )
         self.dec_path_layout.addWidget(self.dec_path_browse_btn)
-        self.main_layout.addLayout(self.dec_path_layout)
+        self.legacy_layout.addLayout(self.dec_path_layout)
 
     def build_ui_unpack_dec(self):
         self.unpack_dec_layout = QHBoxLayout()
@@ -162,7 +164,7 @@ class MainWindow(ComelMainWindowWrapper):
         self.unpack_dec_btn.clicked.connect(self.run_unpack_dec)
         self.unpack_dec_layout.addStretch(0)
         self.unpack_dec_layout.addWidget(self.unpack_dec_btn)
-        self.main_layout.addLayout(self.unpack_dec_layout)
+        self.legacy_layout.addLayout(self.unpack_dec_layout)
 
     def build_ui_datdecext_unknown_path(self):
         self.datdecext_layout = QHBoxLayout()
@@ -181,7 +183,7 @@ class MainWindow(ComelMainWindowWrapper):
             )
         )
         self.datdecext_layout.addWidget(self.datdecext_browse_btn)
-        self.main_layout.addLayout(self.datdecext_layout)
+        self.legacy_layout.addLayout(self.datdecext_layout)
 
     def build_ui_unpack_datdecext_unknown(self):
         self.unpack_datdecext_layout = QHBoxLayout()
@@ -189,7 +191,7 @@ class MainWindow(ComelMainWindowWrapper):
         self.unpack_datdecext_btn.clicked.connect(self.run_unpack_datdecext)
         self.unpack_datdecext_layout.addStretch(0)
         self.unpack_datdecext_layout.addWidget(self.unpack_datdecext_btn)
-        self.main_layout.addLayout(self.unpack_datdecext_layout)
+        self.legacy_layout.addLayout(self.unpack_datdecext_layout)
 
     def build_ui_svo_path(self):
         self.svo_path_layout = QHBoxLayout()
@@ -208,7 +210,7 @@ class MainWindow(ComelMainWindowWrapper):
             )
         )
         self.svo_path_layout.addWidget(self.svo_path_browse_btn)
-        self.main_layout.addLayout(self.svo_path_layout)
+        self.legacy_layout.addLayout(self.svo_path_layout)
 
     def build_ui_extract_svo(self):
         self.extract_svo_layout = QHBoxLayout()
@@ -216,7 +218,7 @@ class MainWindow(ComelMainWindowWrapper):
         self.extract_svo_btn.clicked.connect(self.run_extract_svo)
         self.extract_svo_layout.addStretch(0)
         self.extract_svo_layout.addWidget(self.extract_svo_btn)
-        self.main_layout.addLayout(self.extract_svo_layout)
+        self.legacy_layout.addLayout(self.extract_svo_layout)
 
     def build_ui_spm_spv_path(self):
         self.spm_spv_path_layout = QHBoxLayout()
@@ -235,7 +237,7 @@ class MainWindow(ComelMainWindowWrapper):
             )
         )
         self.spm_spv_path_layout.addWidget(self.spm_spv_path_browse_btn)
-        self.main_layout.addLayout(self.spm_spv_path_layout)
+        self.legacy_layout.addLayout(self.spm_spv_path_layout)
 
     def build_ui_export_spm_spv(self):
         self.export_spm_spv_layout = QHBoxLayout()
@@ -243,7 +245,7 @@ class MainWindow(ComelMainWindowWrapper):
         self.export_spm_spv_btn.clicked.connect(self.run_export_spm_spv)
         self.export_spm_spv_layout.addStretch(0)
         self.export_spm_spv_layout.addWidget(self.export_spm_spv_btn)
-        self.main_layout.addLayout(self.export_spm_spv_layout)
+        self.legacy_layout.addLayout(self.export_spm_spv_layout)
 
     def build_ui_mtr_path(self):
         self.mtr_path_layout = QHBoxLayout()
@@ -262,7 +264,7 @@ class MainWindow(ComelMainWindowWrapper):
             )
         )
         self.mtr_path_layout.addWidget(self.mtr_path_browse_btn)
-        self.main_layout.addLayout(self.mtr_path_layout)
+        self.legacy_layout.addLayout(self.mtr_path_layout)
 
     def build_ui_export_mtr(self):
         self.export_mtr_layout = QHBoxLayout()
@@ -270,7 +272,7 @@ class MainWindow(ComelMainWindowWrapper):
         self.export_mtr_btn.clicked.connect(self.run_export_mtr)
         self.export_mtr_layout.addStretch(0)
         self.export_mtr_layout.addWidget(self.export_mtr_btn)
-        self.main_layout.addLayout(self.export_mtr_layout)
+        self.legacy_layout.addLayout(self.export_mtr_layout)
 
     def build_ui_obj_path(self):
         self.obj_path_layout = QHBoxLayout()
@@ -289,7 +291,7 @@ class MainWindow(ComelMainWindowWrapper):
             )
         )
         self.obj_path_layout.addWidget(self.obj_path_browse_btn)
-        self.main_layout.addLayout(self.obj_path_layout)
+        self.legacy_layout.addLayout(self.obj_path_layout)
 
     def build_ui_obj_viewer(self):
         self.obj_viewer_layout = QHBoxLayout()
@@ -297,14 +299,14 @@ class MainWindow(ComelMainWindowWrapper):
         self.obj_viewer_btn.clicked.connect(self.run_obj_viewer)
         self.obj_viewer_layout.addStretch(0)
         self.obj_viewer_layout.addWidget(self.obj_viewer_btn)
-        self.main_layout.addLayout(self.obj_viewer_layout)
+        self.legacy_layout.addLayout(self.obj_viewer_layout)
 
     def build_ui_log(self):
         self.log_label = QLabel("Output Log:")
-        self.main_layout.addWidget(self.log_label)
+        self.legacy_layout.addWidget(self.log_label)
         self.log = QTextEdit(self)
         self.log.setReadOnly(True)
-        self.main_layout.addWidget(self.log)
+        self.legacy_layout.addWidget(self.log)
 
     def build_ui_repo_url(self):
         self.repo_url_label = QLabel()
@@ -313,7 +315,7 @@ class MainWindow(ComelMainWindowWrapper):
         )
         self.repo_url_label.setOpenExternalLinks(True)
         self.repo_url_label.setAlignment(Qt.AlignCenter)
-        self.main_layout.addWidget(self.repo_url_label)
+        self.legacy_layout.addWidget(self.repo_url_label)
 
     def populate_lineedit_path(self):
         if os.path.exists(CONFIG_JSON):
