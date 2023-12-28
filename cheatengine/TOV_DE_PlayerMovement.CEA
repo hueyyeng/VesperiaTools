@@ -1,0 +1,62 @@
+{ Game   : TOV_DE.exe
+  Version: 
+  Date   : 2020-11-08
+  Author : Tauke
+
+  This script does blah blah blah
+}
+
+define(player_x_mov_address,"TOV_DE.exe"+57DBFE)
+define(player_x_mov_bytes,F3 0F 11 06)
+define(player_z_mov_address,"TOV_DE.exe"+57DC07)
+define(player_z_mov_bytes,F3 0F 11 46 08)
+
+[ENABLE]
+
+assert(player_x_mov_address,player_x_mov_bytes)
+assert(player_z_mov_address,player_z_mov_bytes)
+
+player_x_mov_address:
+db 90 90 90 90
+
+player_z_mov_address:
+db 90 90 90 90 90
+
+[DISABLE]
+
+player_x_mov_address:
+db player_x_mov_bytes
+
+player_z_mov_address:
+db player_z_mov_bytes
+
+dealloc(newmem)
+
+{
+// ORIGINAL CODE - INJECTION POINT: "TOV_DE.exe"+57DBFE
+
+"TOV_DE.exe"+57DBD0: E8 7B 9E 0B 00           -  call TOV_DE.exe+637A50
+"TOV_DE.exe"+57DBD5: 4C 8D 44 24 3C           -  lea r8,[rsp+3C]
+"TOV_DE.exe"+57DBDA: 48 8D 54 24 30           -  lea rdx,[rsp+30]
+"TOV_DE.exe"+57DBDF: 48 8B 08                 -  mov rcx,[rax]
+"TOV_DE.exe"+57DBE2: 49 89 0C 24              -  mov [r12],rcx
+"TOV_DE.exe"+57DBE6: 48 8D 4D A0              -  lea rcx,[rbp-60]
+"TOV_DE.exe"+57DBEA: E8 51 74 1E 00           -  call TOV_DE.exe+765040
+"TOV_DE.exe"+57DBEF: F3 0F 10 45 A0           -  movss xmm0,[rbp-60]
+"TOV_DE.exe"+57DBF4: 48 8B 44 24 58           -  mov rax,[rsp+58]
+"TOV_DE.exe"+57DBF9: F3 0F 10 4D A4           -  movss xmm1,[rbp-5C]
+// ---------- INJECTING HERE ----------
+"TOV_DE.exe"+57DBFE: F3 0F 11 06              -  movss [rsi],xmm0
+"TOV_DE.exe"+57DC02: F3 0F 10 45 A8           -  movss xmm0,[rbp-58]
+// ---------- DONE INJECTING  ----------
+"TOV_DE.exe"+57DC07: F3 0F 11 46 08           -  movss [rsi+08],xmm0
+"TOV_DE.exe"+57DC0C: F3 0F 11 4E 04           -  movss [rsi+04],xmm1
+"TOV_DE.exe"+57DC11: 48 89 86 40 01 00 00     -  mov [rsi+00000140],rax
+"TOV_DE.exe"+57DC18: 48 8B 44 24 60           -  mov rax,[rsp+60]
+"TOV_DE.exe"+57DC1D: 48 89 86 48 01 00 00     -  mov [rsi+00000148],rax
+"TOV_DE.exe"+57DC24: 48 8B 44 24 68           -  mov rax,[rsp+68]
+"TOV_DE.exe"+57DC29: 48 89 86 50 01 00 00     -  mov [rsi+00000150],rax
+"TOV_DE.exe"+57DC30: E9 A6 00 00 00           -  jmp TOV_DE.exe+57DCDB
+"TOV_DE.exe"+57DC35: 83 8E F4 00 00 00 01     -  or dword ptr [rsi+000000F4],01
+"TOV_DE.exe"+57DC3C: 4C 8D 45 80              -  lea r8,[rbp-80]
+}
